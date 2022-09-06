@@ -20,6 +20,8 @@ import {
   AppUpdater,
   CoreSetup,
   CoreStart,
+  HttpInterceptorResponseError,
+  IHttpInterceptController,
   Plugin,
   PluginInitializerContext,
 } from '../../../src/core/public';
@@ -149,23 +151,7 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
     if (config.ui.autologout) {
       // logout the user when getting 401 unauthorized, e.g. when session timed out.
       core.http.intercept({
-        responseError: (httpErrorResponse, controller) => {
-          if (
-            httpErrorResponse.response?.status === 401 &&
-            !(
-              window.location.pathname.toLowerCase().includes(LOGIN_PAGE_URI) ||
-              window.location.pathname.toLowerCase().includes(CUSTOM_ERROR_PAGE_URI)
-            )
-          ) {
-            if (config.auth.logout_url) {
-              window.location.href = config.auth.logout_url;
-            } else {
-              // when session timed out, user credentials in cookie are wiped out
-              // refres the page will direct the user to go through login process
-              window.location.reload();
-            }
-          }
-        },
+        responseError: this.interceptError(config.auth.logout_url, window),
       });
     }
 
@@ -176,4 +162,24 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
   }
 
   public stop() {}
+
+  private interceptError(logoutUrl: string, thisWindow: Window): any {
+    return (httpErrorResponse: HttpInterceptorResponseError, _: IHttpInterceptController) => {
+      if (
+        httpErrorResponse.response?.status === 401 &&
+        !(
+          thisWindow.location.pathname.toLowerCase().includes(LOGIN_PAGE_URI) ||
+          thisWindow.location.pathname.toLowerCase().includes(CUSTOM_ERROR_PAGE_URI)
+        )
+      ) {
+        if (logoutUrl) {
+          thisWindow.location.href = logoutUrl;
+        } else {
+          // when session timed out, user credentials in cookie are wiped out
+          // refres the page will direct the user to go through login process
+          thisWindow.location.reload();
+        }
+      }
+    };
+  }
 }
