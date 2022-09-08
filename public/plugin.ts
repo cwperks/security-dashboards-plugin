@@ -45,6 +45,7 @@ import {
   SecurityPluginStart,
 } from './types';
 import { addTenantToShareURL } from './services/shared-link';
+import { setShouldShowTenantPopup } from './utils/storage-utils';
 
 async function hasApiPermission(core: CoreSetup): Promise<boolean | undefined> {
   try {
@@ -166,18 +167,22 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
   private interceptError(logoutUrl: string, thisWindow: Window): any {
     return (httpErrorResponse: HttpInterceptorResponseError, _: IHttpInterceptController) => {
       if (
-        httpErrorResponse.response?.status === 401 &&
-        !(
-          thisWindow.location.pathname.toLowerCase().includes(LOGIN_PAGE_URI) ||
-          thisWindow.location.pathname.toLowerCase().includes(CUSTOM_ERROR_PAGE_URI)
-        )
+        httpErrorResponse.response?.status === 401
       ) {
-        if (logoutUrl) {
-          thisWindow.location.href = logoutUrl;
-        } else {
-          // when session timed out, user credentials in cookie are wiped out
-          // refres the page will direct the user to go through login process
-          thisWindow.location.reload();
+        setShouldShowTenantPopup(null);
+        if (
+          !(
+            thisWindow.location.pathname.toLowerCase().includes(LOGIN_PAGE_URI) ||
+            thisWindow.location.pathname.toLowerCase().includes(CUSTOM_ERROR_PAGE_URI)
+          )
+        ) {
+          if (logoutUrl) {
+            thisWindow.location.href = logoutUrl;
+          } else {
+            // when session timed out, user credentials in cookie are wiped out
+            // refres the page will direct the user to go through login process
+            thisWindow.location.reload();
+          }
         }
       }
     };
