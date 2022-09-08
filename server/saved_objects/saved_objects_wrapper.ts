@@ -31,6 +31,7 @@ export class SecuritySavedObjectsClientWrapper {
       const availableTenantNames = Object.keys(tenants!);
       availableTenantNames.push('default');
       availableTenantNames.push('');
+      availableTenantNames.push('__user__');
       _.assign(options, { namespaces: availableTenantNames});
       // _.assign(options, { namespaces: [state.selectedTenant]});
       return await wrapperOptions.client.find(options);
