@@ -33,14 +33,10 @@ describe('Session timeout', () => {
     },
   };
 
-  let setShouldShowTenantPopupSpy;
-
   let windowSpy;
 
   beforeEach(() => {
     windowSpy = jest.spyOn(window, "window", "get");
-    setShouldShowTenantPopupSpy = jest.spyOn(setShouldShowTenantPopup);
-    // useStateSpy.mockImplementation((init) => [init, setState]);
   });
 
   afterEach(() => {
@@ -48,7 +44,7 @@ describe('Session timeout', () => {
     jest.clearAllMocks();
   });
 
-  it('should not set modal when show popup is true', () => {
+  it('Should call setShouldShowTenantPopup on session timeout', () => {
     fakeError.response.status = 401;
     windowSpy.mockImplementation(() => ({
       location: {
@@ -57,7 +53,7 @@ describe('Session timeout', () => {
       }
     }));
 
-    let sessionTimeoutFn = interceptError("http://localhost:5601/app/logout", windowSpy)
+    let sessionTimeoutFn = interceptError("http://localhost:5601/app/logout", window)
     sessionTimeoutFn(fakeError, null);
     expect(setShouldShowTenantPopup).toBeCalledTimes(1);
   });

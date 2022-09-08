@@ -163,8 +163,9 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
   }
 
   public stop() {}
+}
 
-  private interceptError(logoutUrl: string, thisWindow: Window): any {
+export function interceptError(logoutUrl: string, thisWindow: Window): any {
     return (httpErrorResponse: HttpInterceptorResponseError, _: IHttpInterceptController) => {
       if (
         httpErrorResponse.response?.status === 401
@@ -187,4 +188,3 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
       }
     };
   }
-}
