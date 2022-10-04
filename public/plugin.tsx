@@ -152,17 +152,27 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
       euiColumn: {
         field: 'namespaces',
         name: (
-        <div>
-          Tenant
-        </div>),
+          <div>
+            Tenant
+          </div>),
         dataType: 'string',
+        render: (value: any[][]) => {
+          let text = value[0][0];
+          if (text === "") {
+            text = "Global";
+          }
+          else if (text === "__user__") {
+            text = "Private";
+          }
+          return <div>{text}</div>;
+        },
       },
       // data: 'aaa',
       loadData: () => {
         // console.log('loading data');
         // return new Promise<string>(() => { return 'aaaaaaa'; })
       },
-    } as SavedObjectsManagementColumn<string>);
+    } as unknown as SavedObjectsManagementColumn<string>);
 
     // Return methods that should be available to other plugins
     return {};
