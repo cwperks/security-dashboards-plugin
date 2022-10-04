@@ -131,7 +131,9 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
       setupMultitenantRoutes(router, securitySessionStorageFactory, this.securityClient);
     }
 
-    core.savedObjects.addClientWrapper(1, 'zengyan-test-wrapper', this.savedObjectClientWrapper.wrapperFactory);
+    if (config.multitenancy.enable_aggregation_view) {
+      core.savedObjects.addClientWrapper(1, 'zengyan-test-wrapper', this.savedObjectClientWrapper.wrapperFactory);
+    }
 
     // const { http } = (await core.getStartServices()).at(0);
     // const startServices = await core.getStartServices();

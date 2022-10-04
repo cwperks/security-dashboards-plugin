@@ -91,6 +91,7 @@ export abstract class AuthenticationType implements IAuthenticationType {
   ) {
     this.securityClient = new SecurityClient(esClient);
     this.type = '';
+    this.config = config;
   }
 
   public authHandler: AuthenticationHandler = async (request, response, toolkit) => {
@@ -182,8 +183,10 @@ export abstract class AuthenticationType implements IAuthenticationType {
         
         // set tenant in header
         // Object.assign(authHeaders, { securitytenant: tenant });
-        Object.assign(authHeaders, { securitytenant: '' }); // always use global tenant to make the backend happy
-
+        if (this.config.multitenancy.enable_aggregation_view) {
+          Object.assign(authHeaders, { securitytenant: '' }); // always use global tenant to make the backend happy
+        }
+      
         // set tenant to cookie
         if (tenant !== cookie!.tenant) {
           cookie!.tenant = tenant;

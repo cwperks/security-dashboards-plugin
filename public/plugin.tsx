@@ -144,35 +144,37 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
       })
     );
 
-    console.log(deps.savedObjectsManagement);
-    console.log('registering column');
-    deps.savedObjectsManagement.columns.register({
-      id: 'tenant_column',
-      // euiColumn: EuiTableFieldDataColumnType<SavedObjectsManagementRecord>,
-      euiColumn: {
-        field: 'namespaces',
-        name: (
-          <div>
-            Tenant
-          </div>),
-        dataType: 'string',
-        render: (value: any[][]) => {
-          let text = value[0][0];
-          if (text === "") {
-            text = "Global";
-          }
-          else if (text === "__user__") {
-            text = "Private";
-          }
-          return <div>{text}</div>;
+    if (config.multitenancy.enable_aggregation_view) {
+      console.log(deps.savedObjectsManagement);
+      console.log('registering column');
+      deps.savedObjectsManagement.columns.register({
+        id: 'tenant_column',
+        // euiColumn: EuiTableFieldDataColumnType<SavedObjectsManagementRecord>,
+        euiColumn: {
+          field: 'namespaces',
+          name: (
+            <div>
+              Tenant
+            </div>),
+          dataType: 'string',
+          render: (value: any[][]) => {
+            let text = value[0][0];
+            if (text === "") {
+              text = "Global";
+            }
+            else if (text === "__user__") {
+              text = "Private";
+            }
+            return <div>{text}</div>;
+          },
         },
-      },
-      // data: 'aaa',
-      loadData: () => {
-        // console.log('loading data');
-        // return new Promise<string>(() => { return 'aaaaaaa'; })
-      },
-    } as unknown as SavedObjectsManagementColumn<string>);
+        // data: 'aaa',
+        loadData: () => {
+          // console.log('loading data');
+          // return new Promise<string>(() => { return 'aaaaaaa'; })
+        },
+      } as unknown as SavedObjectsManagementColumn<string>);
+    }
 
     // Return methods that should be available to other plugins
     return {};
@@ -232,8 +234,12 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
     if (config.multitenancy.enabled) {
       addTenantToShareURL(core);
     }
-    const columns = deps.savedObjectsManagement.columns.getAll();
-    console.log(columns);
+
+    if (config.multitenancy.enable_aggregation_view) {
+      const columns = deps.savedObjectsManagement.columns.getAll();
+      console.log(columns);
+    }
+
     return {};
   }
 
