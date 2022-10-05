@@ -160,8 +160,8 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
           dataType: 'string',
           render: (value: any[][]) => {
             let text = value[0][0];
-            if (text === "") {
-              text = "Global";
+            if (text === null || text === "") {
+              text = "Global"
             }
             else if (text.startsWith("__user__")) {
               text = "Private";
