@@ -162,7 +162,7 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
             if (text === "") {
               text = "Global";
             }
-            else if (text === "__user__") {
+            else if (text.startsWith("__user__")) {
               text = "Private";
             }
             return <div>{text}</div>;
