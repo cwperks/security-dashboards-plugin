@@ -51,6 +51,8 @@ import { SavedObjectsManagementColumn, SavedObjectsManagementRecord } from 'src/
 import { EuiTableFieldDataColumnType } from '@elastic/eui';
 import { string } from 'joi';
 import React from 'react';
+import { i18n } from '@osd/i18n';
+;
 
 async function hasApiPermission(core: CoreSetup): Promise<boolean | undefined> {
   try {
@@ -166,6 +168,7 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
             else if (text.startsWith("__user__")) {
               text = "Private";
             }
+            text = i18n.translate('savedObjectsManagement.objectsTable.table.columnTenantName', {defaultMessage: text})
             return <div>{text}</div>;
           },
         },
