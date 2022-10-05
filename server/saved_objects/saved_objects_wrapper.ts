@@ -13,7 +13,13 @@ export class SecuritySavedObjectsClientWrapper {
     // console.log(`State: ${JSON.stringify(state)}`);
 
     const createWithNamespace = async <T = unknown>(type: string, attributes: T, options?: SavedObjectsCreateOptions) => {
-      _.assign(options, { namespace: [state.selectedTenant]});
+      let selectedTenant = state.selectedTenant;
+      let username = state.authInfo?.user_name;
+      let namespaceValue = selectedTenant;
+      if (selectedTenant === "__user__") {
+        namespaceValue = selectedTenant + username;
+      }
+      _.assign(options, { namespace: [namespaceValue]});
       return await wrapperOptions.client.create(type, attributes, options);
     }
 
@@ -21,7 +27,13 @@ export class SecuritySavedObjectsClientWrapper {
       objects: SavedObjectsBulkGetObject[] = [],
       options: SavedObjectsBaseOptions = {}
     ): Promise<SavedObjectsBulkResponse<T>> => {
-      _.assign(options, { namespace: [state.selectedTenant]});
+      let selectedTenant = state.selectedTenant;
+      let username = state.authInfo?.user_name;
+      let namespaceValue = selectedTenant;
+      if (selectedTenant === "__user__") {
+        namespaceValue = selectedTenant + username;
+      }
+      _.assign(options, { namespace: [namespaceValue]});
       return await wrapperOptions.client.bulkGet(objects, options);
       // return await this._repository.bulkGet(objects, options);
     }
@@ -31,7 +43,7 @@ export class SecuritySavedObjectsClientWrapper {
       const availableTenantNames = Object.keys(tenants!);
       availableTenantNames.push('default');
       availableTenantNames.push('');
-      availableTenantNames.push('__user__');
+      availableTenantNames.push('__user__' + state.authInfo?.user_name);
       _.assign(options, { namespaces: availableTenantNames});
       // _.assign(options, { namespaces: [state.selectedTenant]});
       return await wrapperOptions.client.find(options);
@@ -43,7 +55,13 @@ export class SecuritySavedObjectsClientWrapper {
       id: string,
       options: SavedObjectsBaseOptions = {}
     ): Promise<SavedObject<T>> => {
-      _.assign(options, { namespace: [state.selectedTenant]});
+      let selectedTenant = state.selectedTenant;
+      let username = state.authInfo?.user_name;
+      let namespaceValue = selectedTenant;
+      if (selectedTenant === "__user__") {
+        namespaceValue = selectedTenant + username;
+      }
+      _.assign(options, { namespace: [namespaceValue]});
       return await wrapperOptions.client.get(type, id, options);
       // return await this._repository.get(type, id, options);
     }
@@ -54,7 +72,13 @@ export class SecuritySavedObjectsClientWrapper {
       attributes: Partial<T>,
       options: SavedObjectsUpdateOptions = {}
     ): Promise<SavedObjectsUpdateResponse<T>> => {
-      _.assign(options, { namespace: [state.selectedTenant]});
+      let selectedTenant = state.selectedTenant;
+      let username = state.authInfo?.user_name;
+      let namespaceValue = selectedTenant;
+      if (selectedTenant === "__user__") {
+        namespaceValue = selectedTenant + username;
+      }
+      _.assign(options, { namespace: [namespaceValue]});
       return await wrapperOptions.client.update(type, id, attributes, options);
       // return await this._repository.update(type, id, attributes, options);
     }
@@ -63,7 +87,13 @@ export class SecuritySavedObjectsClientWrapper {
       objects: Array<SavedObjectsBulkCreateObject<T>>,
       options?: SavedObjectsCreateOptions
     ): Promise<SavedObjectsBulkResponse<T>> => {
-      _.assign(options, { namespace: [state.selectedTenant]});
+      let selectedTenant = state.selectedTenant;
+      let username = state.authInfo?.user_name;
+      let namespaceValue = selectedTenant;
+      if (selectedTenant === "__user__") {
+        namespaceValue = selectedTenant + username;
+      }
+      _.assign(options, { namespace: [namespaceValue]});
       return await wrapperOptions.client.bulkCreate(objects, options);
       // return await this._repository.bulkCreate(objects, options);
     }
@@ -72,13 +102,25 @@ export class SecuritySavedObjectsClientWrapper {
       objects: Array<SavedObjectsBulkUpdateObject<T>>,
       options?: SavedObjectsBulkUpdateOptions
     ): Promise<SavedObjectsBulkUpdateResponse<T>> => {
-      _.assign(options, { namespace: [state.selectedTenant]});
+      let selectedTenant = state.selectedTenant;
+      let username = state.authInfo?.user_name;
+      let namespaceValue = selectedTenant;
+      if (selectedTenant === "__user__") {
+        namespaceValue = selectedTenant + username;
+      }
+      _.assign(options, { namespace: [namespaceValue]});
       return await wrapperOptions.client.bulkUpdate(objects, options);
       // return await this._repository.bulkUpdate(objects, options);
     }
 
     const deleteWithNamespace = async (type: string, id: string, options: SavedObjectsDeleteOptions = {}) => {
-      _.assign(options, { namespace: [state.selectedTenant]});
+      let selectedTenant = state.selectedTenant;
+      let username = state.authInfo?.user_name;
+      let namespaceValue = selectedTenant;
+      if (selectedTenant === "__user__") {
+        namespaceValue = selectedTenant + username;
+      }
+      _.assign(options, { namespace: [namespaceValue]});
       return await wrapperOptions.client.delete(type, id, options);
       // return await this._repository.delete(type, id, options);
     }
@@ -87,7 +129,13 @@ export class SecuritySavedObjectsClientWrapper {
       objects: SavedObjectsCheckConflictsObject[] = [],
       options: SavedObjectsBaseOptions = {}
     ): Promise<SavedObjectsCheckConflictsResponse> => {
-      _.assign(options, { namespace: [state.selectedTenant]});
+      let selectedTenant = state.selectedTenant;
+      let username = state.authInfo?.user_name;
+      let namespaceValue = selectedTenant;
+      if (selectedTenant === "__user__") {
+        namespaceValue = selectedTenant + username;
+      }
+      _.assign(options, { namespace: [namespaceValue]});
       return await wrapperOptions.client.checkConflicts(objects, options);
       // return await this._repository.checkConflicts(objects, options);
     }
