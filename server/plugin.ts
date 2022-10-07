@@ -132,44 +132,8 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
     }
 
     if (config.multitenancy.enable_aggregation_view) {
-      core.savedObjects.addClientWrapper(1, 'zengyan-test-wrapper', this.savedObjectClientWrapper.wrapperFactory);
+      core.savedObjects.addClientWrapper(1, 'security-saved-object-client-wrapper', this.savedObjectClientWrapper.wrapperFactory);
     }
-
-    // const { http } = (await core.getStartServices()).at(0);
-    // const startServices = await core.getStartServices();
-    // const httpStart = startServices[0].http;
-    // core.getStartServices().then((startServices) => {
-    //   const coreStart = startServices[0];
-    //   const httpStart = coreStart.http;
-    //   core.savedObjects.addClientWrapper(1, 'zengyan-test-wrapper', (wrapperOptions) => {
-
-    //     // console.log(Object.getPrototypeOf(wrapperOptions.client));
-    //     // httpStart.auth.get(wrapperOptions.request).state;
-    //     const state = httpStart.auth.get(wrapperOptions.request).state;
-    //     console.log(`state: ${JSON.stringify(state)}`);
-    //     return {
-    //       // ...(wrapperOptions.client),
-    //       // get: (type, id, options) => wrapperOptions.client.get(type, id, options),
-    //       get: wrapperOptions.client.get,
-    //       update: wrapperOptions.client.update,
-    //       bulkCreate: wrapperOptions.client.bulkCreate,
-    //       bulkGet: wrapperOptions.client.bulkGet,
-    //       bulkUpdate: wrapperOptions.client.bulkUpdate,
-    //       create: wrapperOptions.client.create,
-    //       delete: wrapperOptions.client.delete,
-    //       errors: wrapperOptions.client.errors,
-    //       checkConflicts: wrapperOptions.client.checkConflicts,
-    //       addToNamespaces: wrapperOptions.client.addToNamespaces,
-    //       find: wrapperOptions.client.find,
-    //       deleteFromNamespaces: wrapperOptions.client.deleteFromNamespaces,
-    //     }
-    //   });
-    // }).catch(error => {
-    //   this.logger.error(error.message);
-    //   process.exit(1);
-    // });
-
-
 
     return {
       config$,
@@ -198,14 +162,14 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
 
       const serializer: SavedObjectsSerializer = core.savedObjects.createSerializer();
       const opensearchDashboardsVersion = this.initializerContext.env.packageInfo.version;
-      // migrateTenantIndices(
-      //   opensearchDashboardsVersion,
-      //   migrationClient,
-      //   this.securityClient,
-      //   typeRegistry,
-      //   serializer,
-      //   this.logger
-      // );
+      migrateTenantIndices(
+        opensearchDashboardsVersion,
+        migrationClient,
+        this.securityClient,
+        typeRegistry,
+        serializer,
+        this.logger
+      );
     }
 
     return {

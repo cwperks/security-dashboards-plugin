@@ -10,7 +10,6 @@ export class SecuritySavedObjectsClientWrapper {
 
   public wrapperFactory: SavedObjectsClientWrapperFactory = (wrapperOptions) => {
     const state: OpenSearchDashboardsAuthState = this.httpStart!.auth.get(wrapperOptions.request).state as OpenSearchDashboardsAuthState || {};
-    // console.log(`State: ${JSON.stringify(state)}`);
 
     const createWithNamespace = async <T = unknown>(type: string, attributes: T, options?: SavedObjectsCreateOptions) => {
       let selectedTenant = state.selectedTenant;
@@ -35,7 +34,6 @@ export class SecuritySavedObjectsClientWrapper {
       }
       _.assign(options, { namespace: [namespaceValue]});
       return await wrapperOptions.client.bulkGet(objects, options);
-      // return await this._repository.bulkGet(objects, options);
     }
 
     const findWithNamespace = async <T = unknown>(options: SavedObjectsFindOptions): Promise<SavedObjectsFindResponse<T>> => {
@@ -45,9 +43,7 @@ export class SecuritySavedObjectsClientWrapper {
       availableTenantNames.push('');
       availableTenantNames.push('__user__' + state.authInfo?.user_name);
       _.assign(options, { namespaces: availableTenantNames});
-      // _.assign(options, { namespaces: [state.selectedTenant]});
       return await wrapperOptions.client.find(options);
-      // return await this._repository.find(options);
     }
 
     const getWithNamespace = async <T = unknown>(
@@ -63,7 +59,6 @@ export class SecuritySavedObjectsClientWrapper {
       }
       _.assign(options, { namespace: [namespaceValue]});
       return await wrapperOptions.client.get(type, id, options);
-      // return await this._repository.get(type, id, options);
     }
 
     const updateWithNamespace = async <T = unknown>(
@@ -80,7 +75,6 @@ export class SecuritySavedObjectsClientWrapper {
       }
       _.assign(options, { namespace: [namespaceValue]});
       return await wrapperOptions.client.update(type, id, attributes, options);
-      // return await this._repository.update(type, id, attributes, options);
     }
 
     const bulkCreateWithNamespace = async <T = unknown>(
@@ -95,7 +89,6 @@ export class SecuritySavedObjectsClientWrapper {
       }
       _.assign(options, { namespace: [namespaceValue]});
       return await wrapperOptions.client.bulkCreate(objects, options);
-      // return await this._repository.bulkCreate(objects, options);
     }
 
     const bulkUpdateWithNamespace = async <T = unknown>(
@@ -110,7 +103,6 @@ export class SecuritySavedObjectsClientWrapper {
       }
       _.assign(options, { namespace: [namespaceValue]});
       return await wrapperOptions.client.bulkUpdate(objects, options);
-      // return await this._repository.bulkUpdate(objects, options);
     }
 
     const deleteWithNamespace = async (type: string, id: string, options: SavedObjectsDeleteOptions = {}) => {
@@ -122,7 +114,6 @@ export class SecuritySavedObjectsClientWrapper {
       }
       _.assign(options, { namespace: [namespaceValue]});
       return await wrapperOptions.client.delete(type, id, options);
-      // return await this._repository.delete(type, id, options);
     }
 
     const checkConflictsWithNamespace = async (
@@ -137,22 +128,10 @@ export class SecuritySavedObjectsClientWrapper {
       }
       _.assign(options, { namespace: [namespaceValue]});
       return await wrapperOptions.client.checkConflicts(objects, options);
-      // return await this._repository.checkConflicts(objects, options);
     }
     
-    // const addToNamespaces = async (
-    //   type: string,
-    //   id: string,
-    //   namespaces: string[],
-    //   options: SavedObjectsAddToNamespacesOptions = {}
-    // ): Promise<SavedObjectsAddToNamespacesResponse> => {
-    //   // return await this._repository.addToNamespaces(type, id, namespaces, options);
-    // }
-
-    // console.log(wrapperOptions);
     return {
       ...(wrapperOptions.client),
-      // get: (type, id, options) => wrapperOptions.client.get(type, id, options),
       get: getWithNamespace,
       update: updateWithNamespace,
       bulkCreate: bulkCreateWithNamespace,
