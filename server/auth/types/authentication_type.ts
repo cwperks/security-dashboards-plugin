@@ -182,9 +182,13 @@ export abstract class AuthenticationType implements IAuthenticationType {
         authState.selectedTenant = tenant;
         
         // set tenant in header
-        // Object.assign(authHeaders, { securitytenant: tenant });
         if (this.config.multitenancy.enable_aggregation_view) {
-          Object.assign(authHeaders, { securitytenant: '' }); // always use global tenant to make the backend happy
+          let globalTenant = '';
+          // Store all saved objects in a single kibana index.
+          Object.assign(authHeaders, { securitytenant: globalTenant });
+        }
+        else {
+          Object.assign(authHeaders, { securitytenant: tenant });
         }
       
         // set tenant to cookie

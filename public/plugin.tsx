@@ -52,7 +52,6 @@ import { EuiTableFieldDataColumnType } from '@elastic/eui';
 import { string } from 'joi';
 import React from 'react';
 import { i18n } from '@osd/i18n';
-;
 
 async function hasApiPermission(core: CoreSetup): Promise<boolean | undefined> {
   try {
@@ -148,11 +147,8 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
     );
 
     if (config.multitenancy.enable_aggregation_view) {
-      console.log(deps.savedObjectsManagement);
-      console.log('registering column');
       deps.savedObjectsManagement.columns.register({
         id: 'tenant_column',
-        // euiColumn: EuiTableFieldDataColumnType<SavedObjectsManagementRecord>,
         euiColumn: {
           field: 'namespaces',
           name: (
@@ -172,11 +168,7 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
             return <div>{text}</div>;
           },
         },
-        // data: 'aaa',
-        loadData: () => {
-          // console.log('loading data');
-          // return new Promise<string>(() => { return 'aaaaaaa'; })
-        },
+        loadData: () => {},
       } as unknown as SavedObjectsManagementColumn<string>);
     }
 
@@ -195,29 +187,6 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
         responseError: interceptError(config.auth.logout_url, window),
       });
     }
-    // intercept http to add name space into API
-    // core.http.intercept(
-    //   {
-    //     request: async (fetchOptions, controller) => {
-    //       console.log(fetchOptions.path);
-    //       if (fetchOptions.path.startsWith('/api/saved_objects/')) {
-    //         let tenant = await fetchCurrentTenant(core.http);
-    //         if (tenant === '') {
-    //           tenant = 'default';
-    //         } else if (tenant === '__user__') {
-    //           tenant = 'private'; // dummy need to capture user info and set here
-    //         }
-    //         let newFetchOptions = {};
-    //         newFetchOptions = {
-    //           ...fetchOptions,
-    //           path: `/s/${tenant}${fetchOptions.path}`,
-    //         }
-    //         return newFetchOptions;
-    //       }
-    //       return fetchOptions;
-    //     }
-    //   }
-    // );
 
     if (config.multitenancy.enabled) {
       addTenantToShareURL(core);
@@ -225,7 +194,6 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
 
     if (config.multitenancy.enable_aggregation_view) {
       const columns = deps.savedObjectsManagement.columns.getAll();
-      console.log(columns);
     }
 
     return {};
