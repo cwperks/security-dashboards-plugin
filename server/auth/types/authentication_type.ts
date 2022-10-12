@@ -65,7 +65,7 @@ export interface OpenSearchAuthInfo {
 }
 
 export interface OpenSearchDashboardsAuthState {
-  authInfo?: OpenSearchAuthInfo,
+  authInfo?: OpenSearchAuthInfo;
   selectedTenant?: string;
 }
 
@@ -180,17 +180,16 @@ export abstract class AuthenticationType implements IAuthenticationType {
           });
         }
         authState.selectedTenant = tenant;
-        
+
         // set tenant in header
         if (this.config.multitenancy.enable_aggregation_view) {
-          let globalTenant = '';
+          const globalTenant = '';
           // Store all saved objects in a single kibana index.
           Object.assign(authHeaders, { securitytenant: globalTenant });
-        }
-        else {
+        } else {
           Object.assign(authHeaders, { securitytenant: tenant });
         }
-      
+
         // set tenant to cookie
         if (tenant !== cookie!.tenant) {
           cookie!.tenant = tenant;

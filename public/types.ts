@@ -14,13 +14,15 @@
  */
 
 import { NavigationPublicPluginStart } from '../../../src/plugins/navigation/public';
-import { SavedObjectsManagementPluginSetup, SavedObjectsManagementPluginStart } from '../../../src/plugins/saved_objects_management/public';
+import {
+  SavedObjectsManagementPluginSetup,
+  SavedObjectsManagementPluginStart,
+} from '../../../src/plugins/saved_objects_management/public';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface SecurityPluginSetup {}
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface SecurityPluginStart {}
-
 
 export interface SecurityPluginSetupDependencies {
   savedObjectsManagement: SavedObjectsManagementPluginSetup;

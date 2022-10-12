@@ -15,6 +15,14 @@
 
 import { BehaviorSubject } from 'rxjs';
 import {
+  SavedObjectsManagementColumn,
+  SavedObjectsManagementRecord,
+} from 'src/plugins/saved_objects_management/public';
+import { EuiTableFieldDataColumnType } from '@elastic/eui';
+import { string } from 'joi';
+import React from 'react';
+import { i18n } from '@osd/i18n';
+import {
   AppMountParameters,
   AppStatus,
   AppUpdater,
@@ -46,11 +54,6 @@ import {
 import { addTenantToShareURL } from './services/shared-link';
 import { fetchCurrentTenant } from './apps/configuration/utils/tenant-utils';
 import { interceptError } from './utils/logout-utils';
-import { SavedObjectsManagementColumn, SavedObjectsManagementRecord } from 'src/plugins/saved_objects_management/public';
-import { EuiTableFieldDataColumnType } from '@elastic/eui';
-import { string } from 'joi';
-import React from 'react';
-import { i18n } from '@osd/i18n';
 
 async function hasApiPermission(core: CoreSetup): Promise<boolean | undefined> {
   try {
@@ -70,11 +73,21 @@ const APP_ID_DASHBOARDS = 'dashboards';
 const APP_ID_OPENSEARCH_DASHBOARDS = 'kibana';
 const APP_LIST_FOR_READONLY_ROLE = [APP_ID_HOME, APP_ID_DASHBOARDS, APP_ID_OPENSEARCH_DASHBOARDS];
 
-export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPluginStart, SecurityPluginSetupDependencies, SecurityPluginStartDependencies> {
+export class SecurityPlugin
+  implements
+    Plugin<
+      SecurityPluginSetup,
+      SecurityPluginStart,
+      SecurityPluginSetupDependencies,
+      SecurityPluginStartDependencies
+    > {
   // @ts-ignore : initializerContext not used
   constructor(private readonly initializerContext: PluginInitializerContext) {}
 
-  public async setup(core: CoreSetup, deps: SecurityPluginSetupDependencies): Promise<SecurityPluginSetup> {
+  public async setup(
+    core: CoreSetup,
+    deps: SecurityPluginSetupDependencies
+  ): Promise<SecurityPluginSetup> {
     const apiPermission = await hasApiPermission(core);
 
     const config = this.initializerContext.config.get<ClientConfigType>();
@@ -146,29 +159,27 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
     );
 
     if (config.multitenancy.enable_aggregation_view) {
-      deps.savedObjectsManagement.columns.register({
+      deps.savedObjectsManagement.columns.register(({
         id: 'tenant_column',
         euiColumn: {
           field: 'namespaces',
-          name: (
-            <div>
-              Tenant
-            </div>),
+          name: <div>Tenant</div>,
           dataType: 'string',
           render: (value: any[][]) => {
             let text = value[0][0];
-            if (text === null || text === "") {
-              text = "Global"
+            if (text === null || text === '') {
+              text = 'Global';
+            } else if (text.startsWith('__user__')) {
+              text = 'Private';
             }
-            else if (text.startsWith("__user__")) {
-              text = "Private";
-            }
-            text = i18n.translate('savedObjectsManagement.objectsTable.table.columnTenantName', {defaultMessage: text})
+            text = i18n.translate('savedObjectsManagement.objectsTable.table.columnTenantName', {
+              defaultMessage: text,
+            });
             return <div>{text}</div>;
           },
         },
         loadData: () => {},
-      } as unknown as SavedObjectsManagementColumn<string>);
+      } as unknown) as SavedObjectsManagementColumn<string>);
     }
 
     // Return methods that should be available to other plugins
