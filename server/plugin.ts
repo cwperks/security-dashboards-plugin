@@ -15,6 +15,7 @@
 
 import { first } from 'rxjs/operators';
 import { Observable } from 'rxjs';
+import _ from 'lodash';
 import {
   PluginInitializerContext,
   CoreSetup,
@@ -38,12 +39,14 @@ import {
   ISavedObjectTypeRegistry,
 } from '../../../src/core/server/saved_objects';
 import { setupIndexTemplate, migrateTenantIndices } from './multitenancy/tenant_index';
-import { IAuthenticationType, OpenSearchDashboardsAuthState } from './auth/types/authentication_type';
+import {
+  IAuthenticationType,
+  OpenSearchDashboardsAuthState,
+} from './auth/types/authentication_type';
 import { getAuthenticationHandler } from './auth/auth_handler_factory';
 import { setupMultitenantRoutes } from './multitenancy/routes';
 import { defineAuthTypeRoutes } from './routes/auth_type_routes';
 import { createMigrationOpenSearchClient } from '../../../src/core/server/saved_objects/migrations/core';
-import _ from 'lodash';
 import { SecuritySavedObjectsClientWrapper } from './saved_objects/saved_objects_wrapper';
 
 export interface SecurityPluginRequestContext {
@@ -132,7 +135,11 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
     }
 
     if (config.multitenancy.enable_aggregation_view) {
-      core.savedObjects.addClientWrapper(1, 'security-saved-object-client-wrapper', this.savedObjectClientWrapper.wrapperFactory);
+      core.savedObjects.addClientWrapper(
+        1,
+        'security-saved-object-client-wrapper',
+        this.savedObjectClientWrapper.wrapperFactory
+      );
     }
 
     return {

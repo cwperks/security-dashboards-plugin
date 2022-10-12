@@ -101,7 +101,7 @@ export function TenantSwitchPanel(props: TenantSwitchPanelProps) {
     };
 
     fetchData();
-  }, [props.coreStart.http]);
+  }, [props.coreStart.http, props.tenant]);
 
   // Custom tenant super select related.
   const onCustomTenantChange = (selectedOption: EuiComboBoxOptionOption[]) => {
