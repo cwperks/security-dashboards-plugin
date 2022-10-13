@@ -53,7 +53,6 @@ import {
 } from './types';
 import { addTenantToShareURL } from './services/shared-link';
 import { interceptError } from './utils/logout-utils';
-import { fetchCurrentTenant } from './apps/configuration/utils/tenant-utils';
 import { interceptError } from './utils/logout-utils';
 
 async function hasApiPermission(core: CoreSetup): Promise<boolean | undefined> {
