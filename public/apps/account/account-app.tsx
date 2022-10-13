@@ -45,10 +45,11 @@ export async function setupTopNavButton(coreStart: CoreStart, config: ClientConf
         coreStart.http.basePath.serverBasePath + CUSTOM_ERROR_PAGE_URI + ERROR_MISSING_ROLE_PATH;
     }
 
+    let tenant: string | undefined;
     if (config.multitenancy.enable_aggregation_view) {
-      const tenant = currentTenant;
+      tenant = currentTenant;
     } else {
-      const tenant = accountInfo.user_requested_tenant;
+      tenant = accountInfo.user_requested_tenant;
     }
     let shouldShowTenantPopup = true;
 
