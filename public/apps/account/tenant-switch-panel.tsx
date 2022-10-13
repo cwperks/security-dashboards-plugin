@@ -92,7 +92,12 @@ export function TenantSwitchPanel(props: TenantSwitchPanelProps) {
         setUsername(currentUserName);
 
         // @ts-ignore
-        const currentRawTenantName = props.tenant;
+        let currentRawTenantName: string | undefined;
+        if (props.config.multitenancy.enable_aggregation_view) {
+          currentRawTenantName = props.tenant;
+        } else {
+          currentRawTenantName = accountInfo.data.user_requested_tenant;
+        }
         setCurrentTenant(currentRawTenantName || '', currentUserName);
       } catch (e) {
         // TODO: switch to better error display.
@@ -101,7 +106,7 @@ export function TenantSwitchPanel(props: TenantSwitchPanelProps) {
     };
 
     fetchData();
-  }, [props.coreStart.http, props.tenant]);
+  }, [props.coreStart.http, props.tenant, props.config.multitenancy.enable_aggregation_view]);
 
   // Custom tenant super select related.
   const onCustomTenantChange = (selectedOption: EuiComboBoxOptionOption[]) => {
