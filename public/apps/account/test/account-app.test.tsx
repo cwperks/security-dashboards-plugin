@@ -62,7 +62,7 @@ describe('Account app', () => {
     },
   };
 
-  const mockTenant = "test1";
+  const mockTenant = 'test1';
 
   beforeAll(() => {
     (fetchAccountInfoSafe as jest.Mock).mockResolvedValue(mockAccountInfo);
