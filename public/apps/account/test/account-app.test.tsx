@@ -50,7 +50,7 @@ describe('Account app', () => {
   const mockConfig = {
     multitenancy: {
       enable_aggregation_view: true,
-    }
+    },
   };
 
   const mockAccountInfo = {
