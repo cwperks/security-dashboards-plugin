@@ -37,8 +37,9 @@ function tenantSpecifiedInUrl() {
 
 export async function setupTopNavButton(coreStart: CoreStart, config: ClientConfigType) {
   const accountInfo = (await fetchAccountInfoSafe(coreStart.http))?.data;
+  let currentTenant: string | undefined;
   try {
-    const currentTenant = await fetchCurrentTenant(coreStart.http);
+    currentTenant = await fetchCurrentTenant(coreStart.http);
   } catch (e) {
     console.log(e);
   }
@@ -77,7 +78,7 @@ export async function setupTopNavButton(coreStart: CoreStart, config: ClientConf
             window.location.reload();
           }
         }
-      } catch (e) {
+      } catch (e: any) {
         constructErrorMessageAndLog(e, `Failed to switch to ${tenant} tenant.`);
       }
     }
