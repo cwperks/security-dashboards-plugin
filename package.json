@@ -19,7 +19,7 @@
     "lint": "yarn run lint:es && yarn run lint:style",
     "pretest:jest_server": "node ./test/jest_integration/runIdpServer.js &",
     "test:jest_server": "node ./test/run_jest_tests.js --config ./test/jest.config.server.js",
-    "test:jest_ui": "node ./test/run_jest_tests.js --config ./test/jest.config.ui.js"
+    "test:jest_ui": "node --trace-warnings ./test/run_jest_tests.js --config ./test/jest.config.ui.js"
   },
   "devDependencies": {
     "@elastic/eslint-import-resolver-kibana": "link:../../packages/osd-eslint-import-resolver-opensearch-dashboards",
