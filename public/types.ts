@@ -58,6 +58,7 @@ export interface ClientConfigType {
     backend_configurable: boolean;
   };
   multitenancy: {
+    enable_aggregation_view: boolean;
     enabled: boolean;
     tenants: {
       enable_private: boolean;
