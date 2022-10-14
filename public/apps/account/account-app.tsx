@@ -37,12 +37,7 @@ function tenantSpecifiedInUrl() {
 
 export async function setupTopNavButton(coreStart: CoreStart, config: ClientConfigType) {
   const accountInfo = (await fetchAccountInfoSafe(coreStart.http))?.data;
-  let currentTenant: string | undefined;
-  try {
-    currentTenant = await fetchCurrentTenant(coreStart.http);
-  } catch (e) {
-    console.log(e);
-  }
+  const currentTenant = await fetchCurrentTenant(coreStart.http);
   if (accountInfo) {
     // Missing role error
     if (accountInfo.roles.length === 0 && !window.location.href.includes(CUSTOM_ERROR_PAGE_URI)) {
