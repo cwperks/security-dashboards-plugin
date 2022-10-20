@@ -172,8 +172,6 @@ export class SecurityPlugin
               text = GLOBAL_TENANT_RENDERING_TEXT;
             } else if (isPrivateTenant(text)) {
               text = PRIVATE_TENANT_RENDERING_TEXT;
-            if (text === '') {
-              text = 'Global';
             } else if (text === null) {
               text = 'Default';
             }
