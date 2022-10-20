@@ -16,9 +16,9 @@
 import { BehaviorSubject } from 'rxjs';
 import {
   SavedObjectsManagementColumn,
-  SavedObjectsManagementRecord,
+  SavedObjectsManagementFilter,
 } from 'src/plugins/saved_objects_management/public';
-import { EuiTableFieldDataColumnType } from '@elastic/eui';
+import { EuiTableFieldDataColumnType, EuiSwitch } from '@elastic/eui';
 import { string } from 'joi';
 import React from 'react';
 import { i18n } from '@osd/i18n';
@@ -52,7 +52,6 @@ import {
   SecurityPluginSetupDependencies,
 } from './types';
 import { addTenantToShareURL } from './services/shared-link';
-import { interceptError } from './utils/logout-utils';
 import { interceptError } from './utils/logout-utils';
 
 async function hasApiPermission(core: CoreSetup): Promise<boolean | undefined> {
@@ -167,8 +166,10 @@ export class SecurityPlugin
           dataType: 'string',
           render: (value: any[][]) => {
             let text = value[0][0];
-            if (text === null || text === '') {
+            if (text === '') {
               text = 'Global';
+            } else if (text === null) {
+              text = 'Default';
             } else if (text.startsWith('__user__')) {
               text = 'Private';
             }
@@ -180,6 +181,42 @@ export class SecurityPlugin
         },
         loadData: () => {},
       } as unknown) as SavedObjectsManagementColumn<string>);
+      let tenants = {}
+      if (!!accountInfo) {
+        tenants = accountInfo.tenants;
+      }
+      const availableTenantNames = Object.keys(tenants!);
+      const filterOptions = availableTenantNames.map((tenant) => {
+        if (tenant === 'global_tenant') {
+          return {
+            name: 'Global',
+            value: '',
+          };
+        } else if (tenant === accountInfo.user_name) {
+          return {
+            name: 'Private',
+            value: `__user__${accountInfo.user_name}`,
+          };
+        }
+        return {
+          value: tenant,
+          name: tenant,
+        };
+      });
+      filterOptions.push({
+        name: 'Default',
+        value: 'default',
+      });
+      deps.savedObjectsManagement.filters.register(({
+        id: 'tenant_filter',
+        type: 'field_value_selection',
+        field: 'namespaces',
+        name: i18n.translate('savedObjectsManagement.objectsTable.table.typeFilterName', {
+          defaultMessage: 'Tenant',
+        }),
+        multiSelect: 'or',
+        options: filterOptions
+      } as unknown) as SavedObjectsManagementFilter);
     }
 
     // Return methods that should be available to other plugins

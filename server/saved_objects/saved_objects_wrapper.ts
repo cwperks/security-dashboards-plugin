@@ -83,7 +83,9 @@ export class SecuritySavedObjectsClientWrapper {
       availableTenantNames.push('default');
       availableTenantNames.push('');
       availableTenantNames.push('__user__' + state.authInfo?.user_name);
-      _.assign(options, { namespaces: availableTenantNames });
+      if (!('namespaces' in options)) {
+        _.assign(options, { namespaces: availableTenantNames });
+      }
       return await wrapperOptions.client.find(options);
     };
 
