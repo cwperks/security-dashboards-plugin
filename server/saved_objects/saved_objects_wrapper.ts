@@ -97,7 +97,9 @@ export class SecuritySavedObjectsClientWrapper {
       if (isPrivateEnabled) {
         availableTenantNames.push(PRIVATE_TENANT + state.authInfo?.user_name);
       }
-      _.assign(options, { namespaces: availableTenantNames });
+      if (!('namespaces' in options)) {
+        _.assign(options, { namespaces: availableTenantNames });
+      }
       return await wrapperOptions.client.find(options);
     };
 

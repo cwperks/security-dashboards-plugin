@@ -14,7 +14,11 @@
  */
 
 import { BehaviorSubject } from 'rxjs';
-import { SavedObjectsManagementColumn } from 'src/plugins/saved_objects_management/public';
+import {
+  SavedObjectsManagementColumn,
+  SavedObjectsManagementFilter,
+} from 'src/plugins/saved_objects_management/public';
+import { EuiTableFieldDataColumnType } from '@elastic/eui';
 import React from 'react';
 import { i18n } from '@osd/i18n';
 import {
@@ -168,6 +172,10 @@ export class SecurityPlugin
               text = GLOBAL_TENANT_RENDERING_TEXT;
             } else if (isPrivateTenant(text)) {
               text = PRIVATE_TENANT_RENDERING_TEXT;
+            if (text === '') {
+              text = 'Global';
+            } else if (text === null) {
+              text = 'Default';
             }
             text = i18n.translate('savedObjectsManagement.objectsTable.table.columnTenantName', {
               defaultMessage: text,
@@ -177,6 +185,42 @@ export class SecurityPlugin
         },
         loadData: () => {},
       } as unknown) as SavedObjectsManagementColumn<string>);
+      let tenants = {}
+      if (!!accountInfo) {
+        tenants = accountInfo.tenants;
+      }
+      const availableTenantNames = Object.keys(tenants!);
+      const filterOptions = availableTenantNames.map((tenant) => {
+        if (tenant === 'global_tenant') {
+          return {
+            name: 'Global',
+            value: '',
+          };
+        } else if (tenant === accountInfo.user_name) {
+          return {
+            name: 'Private',
+            value: `__user__${accountInfo.user_name}`,
+          };
+        }
+        return {
+          value: tenant,
+          name: tenant,
+        };
+      });
+      filterOptions.push({
+        name: 'Default',
+        value: 'default',
+      });
+      deps.savedObjectsManagement.filters.register(({
+        id: 'tenant_filter',
+        type: 'field_value_selection',
+        field: 'namespaces',
+        name: i18n.translate('savedObjectsManagement.objectsTable.table.typeFilterName', {
+          defaultMessage: 'Tenant',
+        }),
+        multiSelect: 'or',
+        options: filterOptions
+      } as unknown) as SavedObjectsManagementFilter);
     }
 
     // Return methods that should be available to other plugins
