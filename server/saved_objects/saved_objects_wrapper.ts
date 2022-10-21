@@ -100,7 +100,19 @@ export class SecuritySavedObjectsClientWrapper {
       if (!('namespaces' in options)) {
         _.assign(options, { namespaces: availableTenantNames });
       }
-      return await wrapperOptions.client.find(options);
+      const resp = await wrapperOptions.client.find(options);
+      if (selectedTenant !== undefined && isPrivateTenant(selectedTenant)) {
+        namespaceValue = selectedTenant + username;
+      }
+      const savedObjects = resp.saved_objects.filter((obj) => {
+        if (obj.type === 'config' && !obj.namespaces.flat().includes(namespaceValue)) {
+          return false;
+        }
+        return true;
+      });
+      resp.total = savedObjects.length;
+      resp.saved_objects = savedObjects;
+      return resp;
     };
 
     const getWithNamespace = async <T = unknown>(
