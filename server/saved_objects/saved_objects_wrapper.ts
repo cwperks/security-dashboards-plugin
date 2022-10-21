@@ -86,6 +86,23 @@ export class SecuritySavedObjectsClientWrapper {
       if (!('namespaces' in options)) {
         _.assign(options, { namespaces: availableTenantNames });
       }
+      let typeToNamespacesMap = {};
+      const selectedTenant = state.selectedTenant;
+      const username = state.authInfo?.user_name;
+      let namespaceValue = selectedTenant;
+      if (selectedTenant === '__user__') {
+        namespaceValue = selectedTenant + username;
+      }
+      options.type.forEach((t) => {
+        if (t === 'config') {
+          typeToNamespacesMap[t] = [namespaceValue];
+        } else {
+          typeToNamespacesMap[t] = availableTenantNames;
+        }
+      });
+      options.typeToNamespacesMap = new Map(Object.entries(typeToNamespacesMap));
+      options.type = '';
+      options.namespaces = [];
       return await wrapperOptions.client.find(options);
     };
 
