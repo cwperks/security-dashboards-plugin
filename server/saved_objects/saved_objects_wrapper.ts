@@ -100,19 +100,31 @@ export class SecuritySavedObjectsClientWrapper {
       if (!('namespaces' in options)) {
         _.assign(options, { namespaces: availableTenantNames });
       }
-      const resp = await wrapperOptions.client.find(options);
-      if (selectedTenant !== undefined && isPrivateTenant(selectedTenant)) {
+      const typeToNamespacesMap = {};
+      if (selectedTenant === '__user__') {
         namespaceValue = selectedTenant + username;
       }
-      const savedObjects = resp.saved_objects.filter((obj) => {
-        if (obj.type === 'config' && !obj.namespaces.flat().includes(namespaceValue)) {
-          return false;
+      options.type.forEach((t) => {
+        if (t === 'config') {
+          if ('namespaces' in options) {
+            if (options.namespaces.includes(namespaceValue)) {
+              typeToNamespacesMap[t] = [namespaceValue];
+            }
+          } else {
+            typeToNamespacesMap[t] = [namespaceValue];
+          }
+        } else {
+          if ('namespaces' in options) {
+            typeToNamespacesMap[t] = options.namespaces;
+          } else {
+            typeToNamespacesMap[t] = availableTenantNames;
+          }
         }
-        return true;
       });
-      resp.total = savedObjects.length;
-      resp.saved_objects = savedObjects;
-      return resp;
+      options.typeToNamespacesMap = new Map(Object.entries(typeToNamespacesMap));
+      options.type = '';
+      options.namespaces = [];
+      return await wrapperOptions.client.find(options);
     };
 
     const getWithNamespace = async <T = unknown>(
