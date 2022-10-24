@@ -104,7 +104,8 @@ export class SecuritySavedObjectsClientWrapper {
       if (selectedTenant === '__user__') {
         namespaceValue = selectedTenant + username;
       }
-      options.type.forEach((t) => {
+      const searchTypes = Array.isArray(options.type) ? options.type : [options.type];
+      searchTypes.forEach((t) => {
         if (t === 'config') {
           if ('namespaces' in options) {
             if (options.namespaces.includes(namespaceValue)) {
