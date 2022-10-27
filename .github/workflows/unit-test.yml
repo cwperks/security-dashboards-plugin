@@ -5,7 +5,9 @@ on: [push, pull_request]
 jobs:
   tests:
     name: Run unit tests
-    runs-on: ubuntu-latest
+    matrix:
+        platform: ["ubuntu-latest", "windows-latest", "macos-latest"]
+    runs-on: ${{ matrix.platform }}
 
     steps:
       - name: Checkout OpenSearch Dashboard
