@@ -315,6 +315,7 @@ describe('start OpenSearch Dashboards server', () => {
     await driver.findElement(By.xpath('//*[@data-test-subj="log-out-1"]')).click();
 
     // RELOGIN AND CHECK TENANT
+    await driver.get('http://localhost:5601/app/opensearch_dashboards_overview#/');
 
     await driver.wait(until.elementsLocated(By.xpath(signInBtnXPath)), 10000);
 
