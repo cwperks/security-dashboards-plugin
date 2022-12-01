@@ -74,7 +74,6 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-        shell: bash
       - name: build security plugin
         id: build_zip
         run: |
@@ -91,4 +90,3 @@ jobs:
         with:
           name: ${{ steps.build_zip.outputs.ARTIFACT_NAME }}
           path: ${{ steps.build_zip.outputs.ARTIFACT_PATH }}
-        shell: bash
