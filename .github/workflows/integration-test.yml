@@ -5,7 +5,11 @@ on: [push, pull_request]
 jobs:
   tests:
     name: Run integration tests
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: ["ubuntu-latest", "windows-latest"]
+    runs-on: ${{ matrix.platform }}
+
     steps:
       - uses: browser-actions/setup-geckodriver@latest
       - run: geckodriver --version
@@ -18,9 +22,11 @@ jobs:
           wget https://ci.opensearch.org/ci/dbc/distribution-build-opensearch/1.3.7/latest/linux/x64/tar/builds/opensearch/dist/opensearch-min-1.3.7-linux-x64.tar.gz
           tar -xzf opensearch-*.tar.gz
           rm -f opensearch-*.tar.gz
+        shell: bash
 
       - name: Download OpenSearch Security Plugin
         run: wget -O opensearch-security.zip https://ci.opensearch.org/ci/dbc/distribution-build-opensearch/1.3.7/latest/linux/x64/tar/builds/opensearch/plugins/opensearch-security-1.3.7.0.zip
+        shell: bash
 
       - name: Run OpenSearch with plugin
         run: |
@@ -44,6 +50,7 @@ jobs:
           ENTRYPOINT /docker-host/os-ep.sh
           EOF
           docker run -d --network=host -i opensearch-test:latest
+        shell: bash
 
       - name: Checkout OpenSearch Dashboard
         uses: actions/checkout@v2
@@ -57,6 +64,7 @@ jobs:
         run: |
           cd ./OpenSearch-Dashboards
           mkdir -p plugins
+        shell: bash
       
       - name: Checkout OpenSearch Dashboard Security plugin
         uses: actions/checkout@v2
@@ -67,6 +75,7 @@ jobs:
       - name: Check OpenSearch Running
         continue-on-error: true
         run: curl -XGET https://localhost:9200 -u 'admin:admin' -k
+        shell: bash
 
       # - name: Get OpenSearch Dashboards version
       #   id: osd_version
@@ -83,6 +92,7 @@ jobs:
         run: |
           echo "::set-output name=node_version::$(cat ./OpenSearch-Dashboards/.node-version)"
           echo "::set-output name=yarn_version::$(jq -r '.engines.yarn' ./OpenSearch-Dashboards/package.json)"
+        shell: bash
       
       - name: Setup node
         uses: actions/setup-node@v1
@@ -95,6 +105,7 @@ jobs:
           npm uninstall -g yarn
           echo "Installing yarn ${{ steps.versions_step.outputs.yarn_version }}"
           npm i -g yarn@${{ steps.versions.outputs.yarn_version }}
+        shell: bash
       
       - name: Check OpenSearch Running
         continue-on-error: true
@@ -105,6 +116,7 @@ jobs:
           cd ./OpenSearch-Dashboards
           yarn osd bootstrap
           node scripts/build_opensearch_dashboards_platform_plugins.js
+        shell: bash
       
       - name: Run integration tests
         run: |
@@ -112,3 +124,4 @@ jobs:
           curl -XGET https://localhost:9200 -u 'admin:admin' -k
           cd ./OpenSearch-Dashboards/plugins/security-dashboards-plugin
           yarn test:jest_server --coverage
+        shell: bash

@@ -5,7 +5,10 @@ on: [push, pull_request]
 jobs:
   unit-tests:
     name: Run unit tests
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: ["ubuntu-latest", "windows-latest"]
+    runs-on: ${{ matrix.platform }}
 
     steps:
       - name: Checkout OpenSearch Dashboard
@@ -19,6 +22,7 @@ jobs:
         run: |
           cd ./OpenSearch-Dashboards
           mkdir -p plugins
+        shell: bash
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -28,15 +32,18 @@ jobs:
         id: osd_version
         run: |
           echo "::set-output name=osd_version::$(jq -r '.opensearchDashboards.version' ./OpenSearch-Dashboards/plugins/security-dashboards-plugin/package.json)"
+        shell: bash
       - name: Use OpenSearch release commit
         run: |
           cd ./OpenSearch-Dashboards
           # git checkout tags/v${{ steps.osd_version.outputs.osd_version }} -b v${{ steps.osd_version.outputs.osd_version }}
+        shell: bash
       - name: Get node and yarn versions
         id: versions
         run: |
           echo "::set-output name=node_version::$(cat ./OpenSearch-Dashboards/.node-version)"
           echo "::set-output name=yarn_version::$(jq -r '.engines.yarn' ./OpenSearch-Dashboards/package.json)"
+        shell: bash
       - name: Setup node
         uses: actions/setup-node@v1
         with:
@@ -47,22 +54,27 @@ jobs:
           npm uninstall -g yarn
           echo "Installing yarn ${{ steps.versions_step.outputs.yarn_version }}"
           npm i -g yarn@${{ steps.versions.outputs.yarn_version }}
+        shell: bash
       - name: Bootstrap OpenSearch Dashboards
         working-directory: ./OpenSearch-Dashboards
         run: |
           yarn osd bootstrap --oss
+        shell: bash
       - name: Run lint
         run: |
           cd ./OpenSearch-Dashboards/plugins/security-dashboards-plugin
           yarn lint
+        shell: bash
       - name: Run unit test
         run: |
           cd ./OpenSearch-Dashboards/plugins/security-dashboards-plugin
           yarn test:jest_ui --coverage
+        shell: bash
       - name: Uploads coverage
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+        shell: bash
       - name: build security plugin
         id: build_zip
         run: |
@@ -73,8 +85,10 @@ jobs:
           artifact_name=`basename $artifact_path`
           echo "::set-output name=ARTIFACT_PATH::$artifact_path"
           echo "::set-output name=ARTIFACT_NAME::$artifact_name"
+        shell: bash
       - name: Upload Workflow Artifacts
         uses: actions/upload-artifact@v1
         with:
           name: ${{ steps.build_zip.outputs.ARTIFACT_NAME }}
           path: ${{ steps.build_zip.outputs.ARTIFACT_PATH }}
+        shell: bash
