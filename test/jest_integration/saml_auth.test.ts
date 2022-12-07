@@ -317,9 +317,14 @@ describe('start OpenSearch Dashboards server', () => {
 
     await driver.findElement(By.xpath(signInBtnXPath)).click();
 
-    await driver.wait(until.elementsLocated(By.xpath(skipWelcomeBtnXPath)), 10000);
+    driver.findElement(By.xpath(skipWelcomeBtnXPath)).then(
+      function(webElement) {
+        webElement.click();
+      },
+      function(err) { }
+    );
 
-    await driver.findElement(By.xpath(skipWelcomeBtnXPath)).click();
+    await driver.wait(until.elementsLocated(By.xpath(userIconBtnXPath)), 10000);
 
     await driver.findElement(By.xpath(userIconBtnXPath)).click();
 
