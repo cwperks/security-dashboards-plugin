@@ -334,6 +334,10 @@ describe('start OpenSearch Dashboards server', () => {
 
     await driver.wait(until.elementsLocated(By.xpath(tenantNameLabelXPath)), 10000);
 
+    const tenantLabel = await driver.findElement(By.xpath(tenantNameLabelXPath));
+
+    await dirver.wait(until.elementTextIs(tenantLabel, 'Global'), 10000);
+
     const tenantName = await driver.findElement(By.xpath(tenantNameLabelXPath)).getText();
 
     await driver.manage().deleteAllCookies();
