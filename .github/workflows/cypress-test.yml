@@ -69,6 +69,18 @@ jobs:
         with:
           plugin_name: security-dashboards-plugin
 
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: ${{ env.FTR_PATH }}
+          repository: opensearch-project/opensearch-dashboards-functional-test
+          ref: 'main'
+
+      - name: Get Cypress version
+        id: cypress_version
+        run: |
+          echo "::set-output name=cypress_version::$(cat ./${{ env.FTR_PATH }}/package.json | jq '.devDependencies.cypress' | tr -d '"')"
+
       - name: Configure and Run OpenSearch Dashboards
         continue-on-error: false
         run: |
@@ -90,27 +102,4 @@ jobs:
           sleep 500
           cat osd.log
           curl -XGET http://localhost:5601 -L
-        
-        #cat osd.log
-
-        #run node ../../scripts/opensearch-dashboards --dev --no-base-path &
-
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          path: ${{ env.FTR_PATH }}
-          repository: opensearch-project/opensearch-dashboards-functional-test
-          ref: 'main'
-
-      - name: Get Cypress version
-        id: cypress_version
-        run: |
-          echo "::set-output name=cypress_version::$(cat ./${{ env.FTR_PATH }}/package.json | jq '.devDependencies.cypress' | tr -d '"')"
-          curl -XGET http://0.0.0.0:5601 -L
-      
-      - name: Run tests
-        uses: cypress-io/github-action@v2
-        with:
-          working-directory: ${{ env.FTR_PATH }}
-          command: yarn cypress:run-with-security-and-aggregation-view --browser chromium --spec ${{ env.SPEC }}
-          #wait-on: 'http://localhost:5601'
+          yarn cypress:run-with-security-and-aggregation-view --browser chromium --spec ${{ env.SPEC }}
