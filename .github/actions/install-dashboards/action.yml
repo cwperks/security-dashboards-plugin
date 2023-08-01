@@ -40,8 +40,8 @@ runs:
 
     - id: osd-version
       run: |
-        echo "::set-output name=osd-version::$(cat package.json | jq '.opensearchDashboards.version' | cut -c 2-4)"
-        echo "::set-output name=osd-x-version::$(cat package.json | jq '.opensearchDashboards.version' | cut -c 2-3)"
+        echo "::set-output name=osd-version::$(cat package.json | jq '.opensearchDashboards.version' | tr -d '"')"
+        echo "::set-output name=osd-x-version::$(cat package.json | jq '.opensearchDashboards.version' | tr -d '"')"
       working-directory: ${{ steps.determine-plugin-directory.outputs.plugin-directory }}
       shell: bash
 
