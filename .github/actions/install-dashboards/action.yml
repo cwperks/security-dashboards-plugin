@@ -39,8 +39,8 @@ runs:
 
     - id: osd-version
       run: |
-        echo "::set-output name=osd-version::$(cat package.json | jq '.opensearchDashboards.version' | tr -d '"')"
-        echo "::set-output name=osd-x-version::$(cat package.json | jq '.opensearchDashboards.version' | tr -d '"')"
+        echo "::set-output name=osd-version::$(cat package.json | jq '.opensearchDashboards.version' | tr -d '"' | rev | cut -d"." -f2-  | rev)"
+        echo "::set-output name=osd-x-version::$(cat package.json | jq '.opensearchDashboards.version' | tr -d '"' | rev | cut -d"." -f2-  | rev)"
       working-directory: ${{ steps.determine-plugin-directory.outputs.plugin-directory }}
       shell: bash
 
