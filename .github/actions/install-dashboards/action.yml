@@ -26,6 +26,10 @@ runs:
       run: echo "::set-output name=plugin-directory::./OpenSearch-Dashboards/plugins/${{ inputs.plugin_name }}"
       shell: bash
 
+    - id: install-rev
+      run: sudo apt-get install -y rev
+      shell: bash
+
     - uses: actions/checkout@v2
       with:
         path: OpenSearch-Dashboards
