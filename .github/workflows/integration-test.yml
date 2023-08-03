@@ -51,6 +51,11 @@ jobs:
           browser: firefox
           version: latest
 
+      - name: Add to path
+        run: |
+          echo "/opt/hostedtoolcache/firefox/latest/x64/firefox" >> $GITHUB_PATH
+        shell: bash
+
       - name: Download security plugin and create setup scripts
         uses: ./.github/actions/download-plugin
         with:
