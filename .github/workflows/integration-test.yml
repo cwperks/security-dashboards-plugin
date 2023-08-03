@@ -40,7 +40,7 @@ jobs:
         if: ${{ runner.os == 'Linux' }}
         uses: browser-actions/setup-firefox@v1
         with:
-          firefox-version: '115.0'
+          firefox-version: '115.0.2'
 
       - run: firefox --version
         if: ${{ runner.os == 'Linux' }}
@@ -51,7 +51,7 @@ jobs:
         uses: RyanL1997/setup-browser@main
         with:
           browser: firefox
-          version: '115.0'
+          version: '115.0.2'
 
       - name: Download security plugin and create setup scripts
         uses: ./.github/actions/download-plugin
