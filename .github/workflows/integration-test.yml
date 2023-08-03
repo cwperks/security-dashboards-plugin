@@ -34,7 +34,7 @@ jobs:
         shell: bash
 
       - uses: browser-actions/setup-geckodriver@latest
-        run: geckodriver --version
+      - run: geckodriver --version
 
       - name: Set up Firefox browser
         if: ${{ runner.os == 'Linux' }}
