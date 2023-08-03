@@ -31,10 +31,11 @@ jobs:
           plugin_version=$(node -p "require('./package.json').version")
           echo "OPENSEARCH_VERSION=$opensearch_version" >> $GITHUB_ENV
           echo "PLUGIN_VERSION=$plugin_version" >> $GITHUB_ENV
+          ln -s /snap/bin/firefox.geckodriver geckodriver
         shell: bash
 
-      - uses: browser-actions/setup-geckodriver@latest
-      - run: geckodriver --version
+      # - uses: browser-actions/setup-geckodriver@latest
+      # - run: geckodriver --version
 
       - name: Set up Firefox browser
         if: ${{ runner.os == 'Linux' }}
@@ -50,11 +51,6 @@ jobs:
         with:
           browser: firefox
           version: latest
-
-      - name: Add to path
-        run: |
-          echo "/opt/hostedtoolcache/firefox/latest/x64/firefox" >> $GITHUB_PATH
-        shell: bash
 
       - name: Download security plugin and create setup scripts
         uses: ./.github/actions/download-plugin
