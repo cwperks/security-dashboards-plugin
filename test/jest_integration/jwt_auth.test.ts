@@ -166,7 +166,7 @@ describe('start OpenSearch Dashboards server', () => {
       );
       const responseBody2 = (getConfigResponse.payload as Buffer).toString();
       let config2 = JSON.parse(responseBody2).config;
-      console.log("config2: " + config2);
+      console.log("config2: " + JSON.stringify(config2));
     }
   });
 
