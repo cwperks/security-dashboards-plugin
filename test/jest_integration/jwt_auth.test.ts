@@ -236,17 +236,19 @@ describe('start OpenSearch Dashboards server', () => {
     const waitFor = delay => new Promise(resolve => setTimeout(resolve, delay));
     while (count > 0) {
       waitFor(6000);
-      const response = await wreck.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`, {
-        rejectUnauthorized: false,
-      });
-      console.log("first response: " + response.res);
-      console.log(response.res.statusCode);
-      if (response.res.statusCode === 200) {
+      let response;
+      try {
+        response = await wreck.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`, {
+          rejectUnauthorized: false,
+        });
+      } catch (e) { console.log("Received error: " + e); }
+      if (response?.res?.statusCode === 200) {
         break;
       }
 
       count--;
     }
+      
     const driver = getDriver(browser, options).build();
 
     await driver.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`);
@@ -297,21 +299,22 @@ describe('start OpenSearch Dashboards server', () => {
       .setIssuedAt()
       .sign(key);
 
-      var count = 10;
-      const waitFor = delay => new Promise(resolve => setTimeout(resolve, delay));
-      while (count > 0) {
-        waitFor(6000);
-        const response = await wreck.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`, {
+    var count = 10;
+    const waitFor = delay => new Promise(resolve => setTimeout(resolve, delay));
+    while (count > 0) {
+      waitFor(6000);
+      let response;
+      try {
+        response = await wreck.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`, {
           rejectUnauthorized: false,
         });
-        console.log("first response: " + response.res);
-        console.log(response.res.statusCode);
-        if (response.res.statusCode === 200) {
-          break;
-        }
-  
-        count--;
+      } catch (e) { console.log("Received error: " + e); }
+      if (response?.res?.statusCode === 200) {
+        break;
       }
+
+      count--;
+    }
     const driver = getDriver(browser, options).build();
     await driver.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`);
 
