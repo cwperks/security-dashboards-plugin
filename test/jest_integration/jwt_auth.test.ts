@@ -144,7 +144,7 @@ describe('start OpenSearch Dashboards server', () => {
       config.dynamic!.authc!.jwt_auth_domain = jwtConfig;
       config.dynamic!.authc!.basic_internal_auth_domain.http_authenticator.challenge = false;
       config.dynamic!.http!.anonymous_auth_enabled = false;
-      await wreck.put('https://localhost:9200/_plugins/_security/api/securityconfig/config', {
+      let wreckoutput = await wreck.put('https://localhost:9200/_plugins/_security/api/securityconfig/config', {
         payload: config,
         rejectUnauthorized: false,
         headers: {
@@ -152,6 +152,8 @@ describe('start OpenSearch Dashboards server', () => {
           authorization: ADMIN_CREDENTIALS,
         },
       });
+      console.log("wreckoutput: " + wreckoutput);
+      console.log("successfully updated security config");
     } catch (error) {
       console.log('Got an error while updating security config!!', error.stack);
       fail(error);
@@ -233,6 +235,7 @@ describe('start OpenSearch Dashboards server', () => {
       .setProtectedHeader({ alg: 'HS256' }) // algorithm
       .setIssuedAt()
       .sign(key);
+    console.log("token: " + token);
     const driver = getDriver(browser, options).build();
     let pagehtml = await driver.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`);
     console.log("pagehtml: " + pagehtml);
