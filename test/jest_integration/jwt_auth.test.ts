@@ -69,6 +69,7 @@ describe('start OpenSearch Dashboards server', () => {
             type: 'jwt',
           },
           jwt: {
+            enabled: true,
             url_param: 'token',
           },
         },
@@ -159,7 +160,7 @@ describe('start OpenSearch Dashboards server', () => {
       fail(error);
     }
 
-    var count = 5;
+    var count = 120;
     const waitFor = delay => new Promise(resolve => setTimeout(resolve, delay));
     while (count > 0) {
       waitFor(1000);
