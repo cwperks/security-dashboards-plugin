@@ -234,7 +234,7 @@ describe('start OpenSearch Dashboards server', () => {
     const token = await new SignJWT(payload) // details to  encode in the token
       .setProtectedHeader({ alg: 'HS256' }) // algorithm
       .setIssuedAt()
-      .sign(key);
+      .sign(signingKey);
     console.log("token: " + token);
     const driver = getDriver(browser, options).build();
     let pagehtml = await driver.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`);
