@@ -51,8 +51,8 @@ describe('start OpenSearch Dashboards server', () => {
           port: 5601,
         },
         logging: {
-          silent: true,
-          verbose: false,
+          silent: false,
+          verbose: true,
         },
         opensearch: {
           hosts: ['https://localhost:9200'],
