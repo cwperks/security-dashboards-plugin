@@ -224,6 +224,9 @@ describe('start OpenSearch Dashboards server', () => {
   });
 
   it('Login to app/opensearch_dashboards_overview#/ when JWT is enabled', async () => {
+    const response = await osdTestServer.request.get(root, '/app/login');
+    expect(response.status).toEqual(200);
+
     const payload = {
       sub: 'jwt_test',
       roles: 'admin,kibanauser',
@@ -234,7 +237,7 @@ describe('start OpenSearch Dashboards server', () => {
     const token = await new SignJWT(payload) // details to  encode in the token
       .setProtectedHeader({ alg: 'HS256' }) // algorithm
       .setIssuedAt()
-      .sign(signingKey);
+      .sign(key);
     console.log("token: " + token);
     const driver = getDriver(browser, options).build();
     let pagehtml = await driver.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`);
@@ -248,6 +251,9 @@ describe('start OpenSearch Dashboards server', () => {
   });
 
   it('Login to app/dev_tools#/console when JWT is enabled', async () => {
+    const response = await osdTestServer.request.get(root, '/app/login');
+    expect(response.status).toEqual(200);
+    
     const payload = {
       sub: 'jwt_test',
       roles: 'admin,kibanauser',
