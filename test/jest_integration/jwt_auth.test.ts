@@ -154,6 +154,19 @@ describe('start OpenSearch Dashboards server', () => {
     } catch (error) {
       console.log('Got an error while updating security config!!', error.stack);
       fail(error);
+    } finally {
+      const getConfigResponse2 = await wreck.get(
+        'https://localhost:9200/_plugins/_security/api/securityconfig',
+        {
+          rejectUnauthorized: false,
+          headers: {
+            authorization: ADMIN_CREDENTIALS,
+          },
+        }
+      );
+      const responseBody2 = (getConfigResponse.payload as Buffer).toString();
+      let config2 = JSON.parse(responseBody2).config;
+      console.log("config2: " + config2);
     }
   });
 
