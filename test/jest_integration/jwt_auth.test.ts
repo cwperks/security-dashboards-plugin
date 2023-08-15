@@ -54,6 +54,7 @@ describe('start OpenSearch Dashboards server', () => {
           silent: false,
           verbose: true,
         },
+        migrations: { skip: false },
         opensearch: {
           hosts: ['https://localhost:9200'],
           ignoreVersionMismatch: true,
