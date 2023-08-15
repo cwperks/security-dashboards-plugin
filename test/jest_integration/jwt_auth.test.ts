@@ -122,7 +122,7 @@ describe('start OpenSearch Dashboards server', () => {
     const jwtConfig = {
       http_enabled: true,
       transport_enabled: false,
-      order: 5,
+      order: 0,
       http_authenticator: {
         challenge: true,
         type: 'jwt',
