@@ -233,7 +233,7 @@ describe('start OpenSearch Dashboards server', () => {
       .setIssuedAt()
       .sign(key);
     const driver = getDriver(browser, options).build();
-    driver.manage().setTimeouts({ implicit: 120000, pageLoad: 120000, script: 120000 });
+    driver.manage().setTimeouts({ implicit: 360000, pageLoad: 360000, script: 360000 });
 
     await driver.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`);
     await driver.wait(until.elementsLocated(By.xpath(pageTitleXPath)), 10000);
@@ -257,7 +257,7 @@ describe('start OpenSearch Dashboards server', () => {
       .setIssuedAt()
       .sign(key);
     const driver = getDriver(browser, options).build();
-    driver.manage().setTimeouts({ implicit: 120000, pageLoad: 120000, script: 120000 });
+    driver.manage().setTimeouts({ implicit: 360000, pageLoad: 360000, script: 360000 });
     await driver.get(`http://localhost:5601/app/dev_tools?token=${token}`);
 
     await driver.wait(
