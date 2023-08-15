@@ -33,12 +33,11 @@ jobs:
           echo "PLUGIN_VERSION=$plugin_version" >> $GITHUB_ENV
         shell: bash
 
-      - uses: browser-actions/setup-geckodriver@v0.0.0
-      - run: geckodriver --version
-
       - name: Set up Firefox browser
         if: ${{ runner.os == 'Linux' }}
         uses: browser-actions/setup-firefox@v1
+        with:
+          firefox-version: '115.0'
 
       - run: firefox --version
         if: ${{ runner.os == 'Linux' }}
