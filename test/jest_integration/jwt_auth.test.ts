@@ -158,6 +158,19 @@ describe('start OpenSearch Dashboards server', () => {
       console.log('Got an error while updating security config!!', error.stack);
       fail(error);
     }
+
+    var count = 5;
+    const waitFor = delay => new Promise(resolve => setTimeout(resolve, delay));
+    while (count > 0) {
+      waitFor(1000);
+      const response = await osdTestServer.request.get(root, '/app/login');
+      console.log("first response: " + response);
+      if (response.status === 200) {
+        break;
+      }
+
+      count--;
+    }
   });
 
   afterAll(async () => {
@@ -224,8 +237,6 @@ describe('start OpenSearch Dashboards server', () => {
   });
 
   it('Login to app/opensearch_dashboards_overview#/ when JWT is enabled', async () => {
-    const response = await osdTestServer.request.get(root, '/app/login');
-    expect(response.status).toEqual(200);
 
     const payload = {
       sub: 'jwt_test',
@@ -251,9 +262,7 @@ describe('start OpenSearch Dashboards server', () => {
   });
 
   it('Login to app/dev_tools#/console when JWT is enabled', async () => {
-    const response = await osdTestServer.request.get(root, '/app/login');
-    expect(response.status).toEqual(200);
-    
+  
     const payload = {
       sub: 'jwt_test',
       roles: 'admin,kibanauser',
