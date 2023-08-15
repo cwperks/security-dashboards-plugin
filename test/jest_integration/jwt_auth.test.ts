@@ -243,6 +243,8 @@ describe('start OpenSearch Dashboards server', () => {
         });
       } catch (e) { console.log("Received error: " + e); }
       if (response?.res?.statusCode === 200) {
+        console.log("Response: " + response.res);
+        console.log("succeeded");
         break;
       }
 
@@ -272,6 +274,25 @@ describe('start OpenSearch Dashboards server', () => {
       .setProtectedHeader({ alg: 'HS256' }) // algorithm
       .setIssuedAt()
       .sign(key);
+
+    var count = 10;
+    const waitFor = delay => new Promise(resolve => setTimeout(resolve, delay));
+    while (count > 0) {
+      waitFor(6000);
+      let response;
+      try {
+        response = await wreck.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`, {
+          rejectUnauthorized: false,
+        });
+      } catch (e) { console.log("Received error: " + e); }
+      if (response?.res?.statusCode === 200) {
+        console.log("Response: " + response.res);
+        console.log("succeeded");
+        break;
+      }
+
+      count--;
+    }
     const driver = getDriver(browser, options).build();
     await driver.get(`http://localhost:5601/app/dev_tools?token=${token}`);
 
@@ -298,23 +319,6 @@ describe('start OpenSearch Dashboards server', () => {
       .setProtectedHeader({ alg: 'HS256' }) // algorithm
       .setIssuedAt()
       .sign(key);
-
-    var count = 10;
-    const waitFor = delay => new Promise(resolve => setTimeout(resolve, delay));
-    while (count > 0) {
-      waitFor(6000);
-      let response;
-      try {
-        response = await wreck.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`, {
-          rejectUnauthorized: false,
-        });
-      } catch (e) { console.log("Received error: " + e); }
-      if (response?.res?.statusCode === 200) {
-        break;
-      }
-
-      count--;
-    }
     const driver = getDriver(browser, options).build();
     await driver.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`);
 
