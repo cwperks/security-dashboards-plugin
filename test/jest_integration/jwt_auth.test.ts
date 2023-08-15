@@ -232,6 +232,21 @@ describe('start OpenSearch Dashboards server', () => {
       .setProtectedHeader({ alg: 'HS256' }) // algorithm
       .setIssuedAt()
       .sign(key);
+    var count = 10;
+    const waitFor = delay => new Promise(resolve => setTimeout(resolve, delay));
+    while (count > 0) {
+      waitFor(6000);
+      const response = await wreck.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`, {
+        rejectUnauthorized: false,
+      });
+      console.log("first response: " + response.res);
+      console.log(response.res.statusCode);
+      if (response.res.statusCode === 200) {
+        break;
+      }
+
+      count--;
+    }
     const driver = getDriver(browser, options).build();
 
     await driver.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`);
@@ -281,6 +296,22 @@ describe('start OpenSearch Dashboards server', () => {
       .setProtectedHeader({ alg: 'HS256' }) // algorithm
       .setIssuedAt()
       .sign(key);
+
+      var count = 10;
+      const waitFor = delay => new Promise(resolve => setTimeout(resolve, delay));
+      while (count > 0) {
+        waitFor(6000);
+        const response = await wreck.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`, {
+          rejectUnauthorized: false,
+        });
+        console.log("first response: " + response.res);
+        console.log(response.res.statusCode);
+        if (response.res.statusCode === 200) {
+          break;
+        }
+  
+        count--;
+      }
     const driver = getDriver(browser, options).build();
     await driver.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`);
 
