@@ -234,7 +234,8 @@ describe('start OpenSearch Dashboards server', () => {
       .setIssuedAt()
       .sign(key);
     const driver = getDriver(browser, options).build();
-    await driver.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`);
+    let pagehtml = await driver.get(`http://localhost:5601/app/opensearch_dashboards_overview?token=${token}`);
+    console.log("pagehtml: " + pagehtml);
     await driver.wait(until.elementsLocated(By.xpath(pageTitleXPath)), 10000);
 
     const cookie = await driver.manage().getCookies();
