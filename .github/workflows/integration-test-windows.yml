@@ -39,6 +39,7 @@ jobs:
           mkdir -p $GITHUB_WORKSPACE
           echo "HERE"
           echo $AGENT_TOOLSDIRECTORY
+          choco list
           ls C:\github\security-dashboards-plugin
           rm -rf "$AGENT_TOOLSDIRECTORY"
 
