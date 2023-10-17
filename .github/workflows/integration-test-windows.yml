@@ -38,7 +38,7 @@ jobs:
           mv $GITHUB_WORKSPACE C:\github\security-dashboards-plugin
           mkdir -p $GITHUB_WORKSPACE
           ls C:\github\security-dashboards-plugin
-          ls D:\
+          ls D:\a\
         
       - name: Set up JDK
         uses: actions/setup-java@v1
