@@ -37,9 +37,10 @@ jobs:
         run: |
           mv $GITHUB_WORKSPACE C:\github\security-dashboards-plugin
           mkdir -p $GITHUB_WORKSPACE
+          echo "HERE"
           echo $AGENT_TOOLSDIRECTORY
           ls C:\github\security-dashboards-plugin
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          rm -rf "$AGENT_TOOLSDIRECTORY"
 
       - name: Set up JDK
         uses: actions/setup-java@v1
