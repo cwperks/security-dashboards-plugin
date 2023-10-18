@@ -76,6 +76,7 @@ jobs:
       - name: Remove unnecessary files Windows
         if: ${{ runner.os == 'Windows' }}
         run: |
+          choco uninstall notexist -n --force
           choco uninstall julia -n --force
           choco uninstall imagemagick -n --force
           choco uninstall imagemagick.app -n --force
