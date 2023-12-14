@@ -227,14 +227,16 @@ export const configSchema = schema.object({
       login_endpoint: schema.maybe(schema.string({ defaultValue: '' })),
     })
   ),
-  jwt: schema.maybe(
-    schema.object({
-      enabled: schema.boolean({ defaultValue: false }),
-      login_endpoint: schema.maybe(schema.string()),
-      url_param: schema.string({ defaultValue: 'authorization' }),
-      header: schema.string({ defaultValue: 'Authorization' }),
-    })
-  ),
+  jwt: schema.object({
+    enabled: schema.boolean({ defaultValue: false }),
+    login_endpoint: schema.maybe(schema.string()),
+    url_param: schema.string({ defaultValue: 'authorization' }),
+    header: schema.string({ defaultValue: 'Authorization' }),
+    extra_storage: schema.object({
+      cookie_prefix: schema.string({ defaultValue: 'security_authentication_jwt', minLength: 2 }),
+      additional_cookies: schema.number({ min: 0, defaultValue: 3 }),
+    }),
+  }),
   ui: schema.object({
     basicauth: schema.object({
       // the login config here is the same as old config `_security.basicauth.login`

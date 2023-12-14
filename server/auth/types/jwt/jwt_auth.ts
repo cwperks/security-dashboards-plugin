@@ -25,10 +25,17 @@ import {
   AuthToolkit,
   IOpenSearchDashboardsResponse,
 } from 'opensearch-dashboards/server';
+import { Server, ServerStateCookieOptions } from '@hapi/hapi';
 import { SecurityPluginConfigType } from '../../..';
 import { SecuritySessionCookie } from '../../../session/security_cookie';
 import { AuthenticationType } from '../authentication_type';
 import { JwtAuthRoutes } from './routes';
+
+import {
+  setExtraAuthStorage,
+  getExtraAuthStorageValue,
+  ExtraAuthStorageOptions,
+} from '../../../session/cookie_splitter';
 
 export class JwtAuthentication extends AuthenticationType {
   public readonly type: string = 'jwt';
@@ -48,8 +55,40 @@ export class JwtAuthentication extends AuthenticationType {
   }
 
   public async init() {
+    this.createExtraStorage();
     const routes = new JwtAuthRoutes(this.router, this.sessionStorageFactory);
     routes.setupRoutes();
+  }
+
+  createExtraStorage() {
+    // @ts-ignore
+    const hapiServer: Server = this.sessionStorageFactory.asScoped({}).server;
+
+    const extraCookiePrefix = this.config.jwt.extra_storage.cookie_prefix;
+    const extraCookieSettings: ServerStateCookieOptions = {
+      isSecure: this.config.cookie.secure,
+      isSameSite: this.config.cookie.isSameSite,
+      password: this.config.cookie.password,
+      domain: this.config.cookie.domain,
+      path: this.coreSetup.http.basePath.serverBasePath || '/',
+      clearInvalid: false,
+      isHttpOnly: true,
+      ignoreErrors: true,
+      encoding: 'iron', // Same as hapi auth cookie
+    };
+
+    for (let i = 1; i <= this.config.saml.extra_storage.additional_cookies; i++) {
+      hapiServer.states.add(extraCookiePrefix + i, extraCookieSettings);
+    }
+  }
+
+  private getExtraAuthStorageOptions(logger?: Logger): ExtraAuthStorageOptions {
+    // If we're here, we will always have the openid configuration
+    return {
+      cookiePrefix: this.config.jwt.extra_storage.cookie_prefix,
+      additionalCookies: this.config.jwt.extra_storage.additional_cookies,
+      logger,
+    };
   }
 
   private getTokenFromUrlParam(request: OpenSearchDashboardsRequest): string | undefined {
@@ -100,23 +139,48 @@ export class JwtAuthentication extends AuthenticationType {
     request: OpenSearchDashboardsRequest<unknown, unknown, unknown, any>,
     authInfo: any
   ): SecuritySessionCookie {
+    const authorizationHeaderValue = this.getBearerToken(request) || '';
+
+    setExtraAuthStorage(
+      request,
+      authorizationHeaderValue,
+      this.getExtraAuthStorageOptions(this.logger)
+    );
     return {
       username: authInfo.user_name,
       credentials: {
-        authHeaderValue: this.getBearerToken(request),
+        authHeaderValueExtra: true,
       },
       authType: this.type,
       expiryTime: Date.now() + this.config.session.ttl,
     };
   }
 
-  async isValidCookie(cookie: SecuritySessionCookie): Promise<boolean> {
+  async isValidCookie(
+    cookie: SecuritySessionCookie,
+    request: OpenSearchDashboardsRequest
+  ): Promise<boolean> {
     return (
       cookie.authType === this.type &&
       cookie.username &&
       cookie.expiryTime &&
-      cookie.credentials?.authHeaderValue
+      (cookie.credentials?.authHeaderValue || this.getExtraAuthStorageValue(request, cookie))
     );
+  }
+
+  getExtraAuthStorageValue(request: OpenSearchDashboardsRequest, cookie: SecuritySessionCookie) {
+    let extraValue = '';
+    if (!cookie.credentials?.authHeaderValueExtra) {
+      return extraValue;
+    }
+
+    try {
+      extraValue = getExtraAuthStorageValue(request, this.getExtraAuthStorageOptions(this.logger));
+    } catch (error) {
+      this.logger.info(error);
+    }
+
+    return extraValue;
   }
 
   handleUnauthedRequest(
@@ -127,12 +191,25 @@ export class JwtAuthentication extends AuthenticationType {
     return response.unauthorized();
   }
 
-  buildAuthHeaderFromCookie(cookie: SecuritySessionCookie): any {
-    const header: any = {};
-    const authHeaderValue = cookie.credentials?.authHeaderValue;
-    if (authHeaderValue) {
-      header[this.authHeaderName] = authHeaderValue;
+  buildAuthHeaderFromCookie(
+    cookie: SecuritySessionCookie,
+    request: OpenSearchDashboardsRequest
+  ): any {
+    const headers: any = {};
+
+    if (cookie.credentials?.authHeaderValueExtra) {
+      try {
+        const extraAuthStorageValue = this.getExtraAuthStorageValue(request, cookie);
+        headers[this.authHeaderName] = extraAuthStorageValue;
+      } catch (error) {
+        this.logger.error(error);
+        // @todo Re-throw?
+        // throw error;
+      }
+    } else {
+      headers[this.authHeaderName] = cookie.credentials?.authHeaderValue;
     }
-    return header;
+
+    return headers;
   }
 }
