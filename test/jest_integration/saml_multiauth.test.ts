@@ -94,6 +94,7 @@ describe('start OpenSearch Dashboards server', () => {
     const driver = getDriver(browser, options).build();
     await driver.get('http://localhost:7000');
     await driver.wait(until.elementsLocated(By.xpath(signInBtnXPath)), 20000);
+    await driver.quit();
 
     console.log('Starting OpenSearchDashboards server..');
     await root.setup();
