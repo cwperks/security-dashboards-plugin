@@ -167,6 +167,7 @@ describe('start OpenSearch Dashboards server', () => {
           authorization: ADMIN_CREDENTIALS,
         },
       });
+      console.log("Security config updated.");
     } catch (error) {
       console.log('Got an error while updating security config!!', error.stack);
       fail(error);
@@ -244,6 +245,7 @@ describe('start OpenSearch Dashboards server', () => {
     await driver.get(loginUrlWithNextUrl);
     await driver.wait(until.elementsLocated(By.xpath(samlLogInButton)), 20000);
     await driver.findElement(By.xpath(samlLogInButton)).click();
+    await driver.navigate().refresh();
     await driver.wait(until.elementsLocated(By.xpath(signInBtnXPath)), 20000);
     await driver.findElement(By.xpath(signInBtnXPath)).click();
     // TODO Use a better XPath.
@@ -268,6 +270,7 @@ describe('start OpenSearch Dashboards server', () => {
     await driver.get(loginUrl);
     await driver.wait(until.elementsLocated(By.xpath(samlLogInButton)), 20000);
     await driver.findElement(By.xpath(samlLogInButton)).click();
+    await driver.navigate().refresh();
     await driver.wait(until.elementsLocated(By.xpath(signInBtnXPath)), 20000);
     await driver.findElement(By.xpath(signInBtnXPath)).click();
     // TODO Use a better XPath.
