@@ -36,7 +36,7 @@ describe('start OpenSearch Dashboards server', () => {
   const samlLogInButton = '//a[@aria-label="saml_login_button"]';
   // Browser Settings
   const browser = 'firefox';
-  const options = new Options().headless();
+  const options = new Options();
 
   beforeAll(async () => {
     root = osdTestServer.createRootWithSettings(
@@ -90,6 +90,10 @@ describe('start OpenSearch Dashboards server', () => {
         dev: true,
       }
     );
+
+    const driver = getDriver(browser, options).build();
+    await driver.get('http://localhost:7000');
+    await driver.wait(until.elementsLocated(By.xpath(signInBtnXPath)), 20000);
 
     console.log('Starting OpenSearchDashboards server..');
     await root.setup();
@@ -167,7 +171,7 @@ describe('start OpenSearch Dashboards server', () => {
           authorization: ADMIN_CREDENTIALS,
         },
       });
-      console.log("Security config updated.");
+      console.log('Security config updated.');
     } catch (error) {
       console.log('Got an error while updating security config!!', error.stack);
       fail(error);
