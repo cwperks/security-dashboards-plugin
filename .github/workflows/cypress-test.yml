@@ -38,6 +38,15 @@ jobs:
           echo "PLUGIN_VERSION=$plugin_version" >> $GITHUB_ENV
         shell: bash
 
+      - name: Remove unnecessary files Windows
+        if: ${{ runner.os == 'Windows' }}
+        run: |
+          choco uninstall julia -n --force
+          choco uninstall imagemagick -n --force
+          choco uninstall imagemagick.app -n --force
+          choco uninstall r.project -n --force
+          choco uninstall rtools -n --force
+
       - name: Download security plugin and create setup scripts
         uses: ./.github/actions/download-plugin
         with:
