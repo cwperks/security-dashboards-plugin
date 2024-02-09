@@ -57,7 +57,7 @@ jobs:
         with:
           plugin_name: security-dashboards-plugin
 
-      - name: Configure and Run OpenSearch Dashboards with Cypress Test Cases
+      - name: Configure and Run OpenSearch Dashboards
         run: |
           cd ./OpenSearch-Dashboards
           echo 'server.host: "0.0.0.0"' >> ./config/opensearch_dashboards.yml
@@ -71,7 +71,7 @@ jobs:
           echo 'opensearch_security.readonly_mode.roles: ["kibana_read_only"]' >> ./config/opensearch_dashboards.yml
           echo 'opensearch_security.cookie.secure: false' >> ./config/opensearch_dashboards.yml
           echo 'opensearch_security.multitenancy.enable_aggregation_view: true' >> ./config/opensearch_dashboards.yml
-          nohup yarn start --no-base-path --no-watch &
+          nohup yarn start --no-base-path --no-watch | tee dashboard.log &
 
       # Check if OSD is ready with a max timeout of 600 seconds
       - name : Check if OpenSearch Dashboards Is Ready
