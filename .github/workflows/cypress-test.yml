@@ -95,6 +95,7 @@ jobs:
               echo "Timeout for 600 seconds reached. OpenSearch Dashboards did not finish compiling."
               exit 1
             fi
+            tail -n 50 dashboard.log
             sleep 10
           done
         shell: bash
