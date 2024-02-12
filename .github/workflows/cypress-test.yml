@@ -44,13 +44,6 @@ jobs:
           plugin-name: ${{ env.PLUGIN_NAME }}
           plugin-version: ${{ env.PLUGIN_VERSION }}
 
-      # https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
-      - name: Remove unnecessary files Linux
-        if: ${{ runner.os == 'Linux' }}
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-
       - name: Run Opensearch with A Single Plugin
         uses: opensearch-project/security/.github/actions/start-opensearch-with-one-plugin@main
         with:
@@ -58,6 +51,13 @@ jobs:
           plugin-name: ${{ env.PLUGIN_NAME }}
           setup-script-name: setup
           admin-password: myStrongPassword123!
+        
+      # https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
+      - name: Remove unnecessary files Linux
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
       - name: Run Dashboard with Security Dashboards Plugin
         uses: ./.github/actions/install-dashboards
