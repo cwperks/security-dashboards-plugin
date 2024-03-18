@@ -30,6 +30,12 @@ export default function (Client: any, config: any, components: any) {
     },
   });
 
+  Client.prototype.opensearch_security.prototype.failonanonymous = ca({
+    url: {
+      fmt: '/_plugins/_security/failonanonymous',
+    },
+  });
+
   Client.prototype.opensearch_security.prototype.dashboardsinfo = ca({
     url: {
       fmt: '/_plugins/_security/dashboardsinfo',

@@ -183,7 +183,7 @@ export class SecurityClient {
   public async getSamlHeader(request: OpenSearchDashboardsRequest) {
     try {
       // response is expected to be an error
-      await this.esClient.asScoped(request).callAsCurrentUser('opensearch_security.authinfo');
+      await this.esClient.asScoped(request).callAsCurrentUser('opensearch_security.failonanonymous');
     } catch (error: any) {
       // the error looks like
       // wwwAuthenticateDirective:
