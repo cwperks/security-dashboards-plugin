@@ -32,12 +32,13 @@ import { AppDependencies } from '../../types';
 import { buildHashUrl } from '../utils/url-builder';
 import { Action } from '../types';
 import { ResourceType } from '../../../../common';
-import { API_ENDPOINT_CACHE, DocLinks } from '../constants';
+import { API_ENDPOINT_CACHE, API_ENDPOINT_DATASOURCE_TOGGLE, DocLinks } from '../constants';
 import { ExternalLink, ExternalLinkButton } from '../utils/display-utils';
-import { httpDelete } from '../utils/request-utils';
+import { httpDelete, httpPost } from '../utils/request-utils';
 import { createSuccessToast, createUnknownErrorToast, useToastState } from '../utils/toast-utils';
 import { SecurityPluginTopNavMenu } from '../top-nav-menu';
 import { Cluster } from '../../../types';
+import { DataSourceOption } from 'src/plugins/data_source_management/public/components/data_source_selector/data_source_selector';
 
 const addBackendStep = {
   title: 'Add backends',
@@ -169,7 +170,7 @@ export function getClusterInfoIfEnabled(dataSourceEnabled: boolean, cluster: Clu
 
 export function GetStarted(props: AppDependencies) {
   const dataSourceEnabled = !!props.depsStart.dataSource?.dataSourceEnabled;
-  const [dataSource, setDataSource] = useState<Cluster>({ id: '', label: '' });
+  // const [dataSource, setDataSource] = useState<Cluster>({ id: '', label: '' });
 
   let steps;
   if (props.config.ui.backend_configurable) {
@@ -185,7 +186,12 @@ export function GetStarted(props: AppDependencies) {
         <SecurityPluginTopNavMenu
           {...props}
           dataSourcePickerReadOnly={false}
-          setDatasourceId={setDataSource}
+          setDatasourceId={async (dataSource: DataSourceOption) => {
+            console.log("datasource: " + dataSource.id);
+            await httpPost(props.coreStart.http, API_ENDPOINT_DATASOURCE_TOGGLE, {
+              dataSourceId: dataSource.id,
+            });
+          }}
         />
         <EuiPageHeader>
           <EuiTitle size="l">
@@ -253,27 +259,19 @@ export function GetStarted(props: AppDependencies) {
               data-test-subj="purge-cache"
               onClick={async () => {
                 try {
-                  await httpDelete(props.coreStart.http, API_ENDPOINT_CACHE, {
-                    dataSourceId: dataSource.id,
-                  });
+                  await httpDelete(props.coreStart.http, API_ENDPOINT_CACHE);
                   addToast(
                     createSuccessToast(
                       'cache-flush-success',
-                      `Cache purge successful ${getClusterInfoIfEnabled(
-                        dataSourceEnabled,
-                        dataSource
-                      )}`,
-                      `Cache purge successful ${getClusterInfoIfEnabled(
-                        dataSourceEnabled,
-                        dataSource
-                      )}`
+                      `Cache purge successful`,
+                      `Cache purge successful`
                     )
                   );
                 } catch (err) {
                   addToast(
                     createUnknownErrorToast(
                       'cache-flush-failed',
-                      `purge cache ${getClusterInfoIfEnabled(dataSourceEnabled, dataSource)}`
+                      `purge cache`
                     )
                   );
                 }

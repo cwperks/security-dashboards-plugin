@@ -20,10 +20,11 @@ import { ClientConfigType } from '../../types';
 import { PLUGIN_NAME } from '../../../common';
 import { AppDependencies } from '../types';
 import { Cluster } from '../../types';
+import { DataSourceOption } from 'src/plugins/data_source_management/public/components/data_source_selector/data_source_selector';
 
 export interface TopNavMenuProps extends AppDependencies {
   dataSourcePickerReadOnly: boolean;
-  setDatasourceId: React.Dispatch<React.SetStateAction<Cluster>>;
+  setDatasourceId: (dataSource: DataSourceOption) => void;
 }
 
 export const SecurityPluginTopNavMenu = (props: TopNavMenuProps) => {
@@ -39,7 +40,7 @@ export const SecurityPluginTopNavMenu = (props: TopNavMenuProps) => {
       savedObjects={coreStart.savedObjects.client}
       setMenuMountPoint={setHeaderActionMenu}
       notifications={coreStart.notifications}
-      dataSourceCallBackFunc={(datasource) => setDatasourceId(datasource)}
+      dataSourceCallBackFunc={setDatasourceId}
       hideLocalCluster={false}
       fullWidth={false}
     />

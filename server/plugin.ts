@@ -24,6 +24,7 @@ import {
   ILegacyClusterClient,
   SessionStorageFactory,
   SharedGlobalConfig,
+  OpenSearchClient,
 } from '../../../src/core/server';
 
 import { SecurityPluginSetup, SecurityPluginStart } from './types';
@@ -52,6 +53,7 @@ import { DataSourcePluginSetup } from '../../../src/plugins/data_source/server/t
 export interface SecurityPluginRequestContext {
   logger: Logger;
   esClient: ILegacyClusterClient;
+  datasourceClient: any; // TODO make the typing stronger
 }
 
 export interface SecurityPluginSetupDependencies {
@@ -145,7 +147,7 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
     }
 
     // Register server side APIs
-    defineRoutes(router, dataSourceEnabled);
+    defineRoutes(router, dataSourceEnabled, core);
     defineAuthTypeRoutes(router, config);
 
     // set up multi-tenant routes

@@ -21,12 +21,14 @@ import {
   OpenSearchDashboardsResponseFactory,
   RequestHandlerContext,
   OpenSearchDashboardsRequest,
+  CoreSetup,
 } from 'opensearch-dashboards/server';
 import { API_PREFIX, CONFIGURATION_API_PREFIX, isValidResourceName } from '../../common';
 import { ResourceType } from '../../common';
+import { inspect } from 'util';
 
 // TODO: consider to extract entity CRUD operations and put it into a client class
-export function defineRoutes(router: IRouter, dataSourceEnabled: boolean) {
+export function defineRoutes(router: IRouter, dataSourceEnabled: boolean, core: CoreSetup) {
   const internalUserSchema = schema.object({
     description: schema.maybe(schema.string()),
     password: schema.maybe(schema.string()),
@@ -740,13 +742,13 @@ export function defineRoutes(router: IRouter, dataSourceEnabled: boolean) {
   );
 
   /**
-   * Deletes cache.
+   * Toggle DataSource.
    *
-   * Sample response: {"message":"Cache flushed successfully."}
+   * Sample response: {"message":"Datasource toggled successfully."}
    */
-  router.delete(
+  router.post(
     {
-      path: `${API_PREFIX}/configuration/cache`,
+      path: `${API_PREFIX}/configuration/datasource/toggle`,
       validate: {
         body: schema.object({
           dataSourceId: schema.maybe(schema.string()),
@@ -754,7 +756,53 @@ export function defineRoutes(router: IRouter, dataSourceEnabled: boolean) {
       },
     },
     async (context, request, response) => {
-      return wrapRouteWithDataSource(
+      console.log("request.body: " + inspect(request.body));
+      if (!dataSourceEnabled) {
+        return response.ok({
+          body: {
+            message: "Multiple datasources not enabled or datasourceId not supplied.",
+          },
+        }); 
+      } else {
+        const logger = context.security_plugin?.logger;
+        const esClient = context.security_plugin?.esClient;
+        if (!request.body?.dataSourceId) {
+          console.log("context.security_plugin?: " + inspect(context.security_plugin));
+          core.http.registerRouteHandlerContext('security_plugin', (context, request) => {
+            return { logger, esClient };
+          });
+        } else {
+          const dataSourceClient = await context.dataSource?.opensearch.legacy.getClient(request.body?.dataSourceId);
+          core.http.registerRouteHandlerContext('security_plugin', (context, request) => {
+            console.log("context.security_plugin?: " + inspect(context.security_plugin));
+            return {
+              logger,
+              esClient,
+              datasourceClient: dataSourceClient,
+            };
+          });
+        }
+        return response.ok({
+          body: {
+            message: "Datasource toggled successfully.",
+          },
+        });
+      }
+    }
+  );
+
+  /**
+   * Deletes cache.
+   *
+   * Sample response: {"message":"Cache flushed successfully."}
+   */
+  router.delete(
+    {
+      path: `${API_PREFIX}/configuration/cache`,
+      validate: false,
+    },
+    async (context, request, response) => {
+      return callAPI(
         dataSourceEnabled,
         context,
         request,
@@ -884,14 +932,16 @@ export function defineRoutes(router: IRouter, dataSourceEnabled: boolean) {
   );
 }
 
-const wrapRouteWithDataSource = async (
+const callAPI = async (
   dataSourceEnabled: boolean,
   context: RequestHandlerContext,
   request: OpenSearchDashboardsRequest<unknown, unknown, any>,
   response: OpenSearchDashboardsResponseFactory,
   endpoint: string
 ) => {
-  if (!dataSourceEnabled || !request.body?.dataSourceId) {
+  // if datasourceClient is undefined, the datasource has never been toggled
+  console.log("context.security_plugin.datasourceClient: " + inspect(context.security_plugin.datasourceClient));
+  if (!dataSourceEnabled || !context.security_plugin.datasourceClient) {
     const client = context.security_plugin.esClient.asScoped(request);
     let esResponse;
     try {
@@ -905,16 +955,18 @@ const wrapRouteWithDataSource = async (
       return errorResponse(response, error);
     }
   } else {
-    const client = context.dataSource.opensearch.legacy.getClient(request.body?.dataSourceId);
+    const client = context.security_plugin.datasourceClient;
     let esResponse;
     try {
       esResponse = await client.callAPI(endpoint, {});
+      console.log("esResponse: " + inspect(esResponse));
       return response.ok({
         body: {
           message: esResponse.message,
         },
       });
     } catch (error) {
+      console.log("error: " + inspect(error));
       return errorResponse(response, error);
     }
   }
