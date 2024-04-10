@@ -15,30 +15,21 @@
 
 import { BehaviorSubject } from 'rxjs';
 import { SavedObjectsManagementColumn } from 'src/plugins/saved_objects_management/public';
-import { i18n } from '@osd/i18n';
 import {
   AppMountParameters,
   AppStatus,
   AppUpdater,
   CoreSetup,
   CoreStart,
-  DEFAULT_APP_CATEGORIES,
   Plugin,
   PluginInitializerContext,
 } from '../../../src/core/public';
-import { APP_ID_LOGIN, CUSTOM_ERROR_PAGE_URI, LOGIN_PAGE_URI, PLUGIN_NAME } from '../common';
+import { APP_ID_LOGIN, CUSTOM_ERROR_PAGE_URI, LOGIN_PAGE_URI } from '../common';
 import { APP_ID_CUSTOMERROR } from '../common';
 import { setupTopNavButton } from './apps/account/account-app';
 import { fetchAccountInfoSafe } from './apps/account/utils';
-import {
-  API_ENDPOINT_PERMISSIONS_INFO,
-  includeClusterPermissions,
-  includeIndexPermissions,
-} from './apps/configuration/constants';
-import {
-  excludeFromDisabledRestCategories,
-  excludeFromDisabledTransportCategories,
-} from './apps/configuration/panels/audit-logging/constants';
+import { API_ENDPOINT_PERMISSIONS_INFO } from './apps/configuration/constants';
+
 import {
   SecurityPluginStartDependencies,
   ClientConfigType,
