@@ -13,8 +13,6 @@
  *   permissions and limitations under the License.
  */
 
-import { first } from 'rxjs/operators';
-import { Observable } from 'rxjs';
 import {
   PluginInitializerContext,
   CoreSetup,
@@ -22,8 +20,6 @@ import {
   Plugin,
   Logger,
   ILegacyClusterClient,
-  SessionStorageFactory,
-  SharedGlobalConfig,
 } from '../../../src/core/server';
 
 import { SecurityPluginSetup, SecurityPluginStart } from './types';
@@ -31,21 +27,9 @@ import { defineRoutes } from './routes';
 import { SecurityPluginConfigType } from '.';
 import opensearchSecurityConfigurationPlugin from './backend/opensearch_security_configuration_plugin';
 import opensearchSecurityPlugin from './backend/opensearch_security_plugin';
-import { SecuritySessionCookie, getSecurityCookieOptions } from './session/security_cookie';
 import { SecurityClient } from './backend/opensearch_security_client';
-import {
-  SavedObjectsSerializer,
-  ISavedObjectTypeRegistry,
-} from '../../../src/core/server/saved_objects';
-import { setupIndexTemplate, migrateTenantIndices } from './multitenancy/tenant_index';
-import { IAuthenticationType } from './auth/types/authentication_type';
-import { getAuthenticationHandler } from './auth/auth_handler_factory';
-import { setupMultitenantRoutes } from './multitenancy/routes';
-import { defineAuthTypeRoutes } from './routes/auth_type_routes';
-import { createMigrationOpenSearchClient } from '../../../src/core/server/saved_objects/migrations/core';
+
 import { SecuritySavedObjectsClientWrapper } from './saved_objects/saved_objects_wrapper';
-import { addTenantParameterToResolvedShortLink } from './multitenancy/tenant_resolver';
-import { ReadonlyService } from './readonly/readonly_service';
 
 export interface SecurityPluginRequestContext {
   logger: Logger;
@@ -87,25 +71,25 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
     this.logger.debug('opendistro_security: Setup');
 
     const config$ = this.initializerContext.config.create<SecurityPluginConfigType>();
-    const config: SecurityPluginConfigType = await config$.pipe(first()).toPromise();
+    // const config: SecurityPluginConfigType = await config$.pipe(first()).toPromise();
 
     const router = core.http.createRouter();
 
     const esClient: ILegacyClusterClient = core.opensearch.legacy.createClient(
       'opendistro_security',
       {
-        plugins: [opensearchSecurityConfigurationPlugin, opensearchSecurityPlugin],
+        plugins: [opensearchSecurityPlugin, opensearchSecurityConfigurationPlugin],
       }
     );
 
     this.securityClient = new SecurityClient(esClient);
 
-    const securitySessionStorageFactory: SessionStorageFactory<SecuritySessionCookie> = await core.http.createCookieSessionStorageFactory<
-      SecuritySessionCookie
-    >(getSecurityCookieOptions(config));
+    // const securitySessionStorageFactory: SessionStorageFactory<SecuritySessionCookie> = await core.http.createCookieSessionStorageFactory<
+    //   SecuritySessionCookie
+    // >(getSecurityCookieOptions(config));
 
     // put logger into route handler context, so that we don't need to pass througth parameters
-    core.http.registerRouteHandlerContext('security_plugin', (context, request) => {
+    core.http.registerRouteHandlerContext('security_pages_plugin', (context, request) => {
       return {
         logger: this.logger,
         esClient,
@@ -113,51 +97,51 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
     });
 
     // setup auth
-    const auth: IAuthenticationType = await getAuthenticationHandler(
-      config.auth.type,
-      router,
-      config,
-      core,
-      esClient,
-      securitySessionStorageFactory,
-      this.logger
-    );
-    core.http.registerAuth(auth.authHandler);
+    // const auth: IAuthenticationType = await getAuthenticationHandler(
+    //   config.auth.type,
+    //   router,
+    //   config,
+    //   core,
+    //   esClient,
+    //   securitySessionStorageFactory,
+    //   this.logger
+    // );
+    // core.http.registerAuth(auth.authHandler);
 
     /* Here we check if multitenancy is enabled to ensure if it is, we insert the tenant info (security_tenant) into the resolved, short URL so the page can correctly load with the right tenant information [Fix for issue 1203](https://github.com/opensearch-project/security-dashboards-plugin/issues/1203 */
-    if (config.multitenancy?.enabled) {
-      core.http.registerOnPreResponse((request, preResponse, toolkit) => {
-        addTenantParameterToResolvedShortLink(request);
-        return toolkit.next();
-      });
-    }
+    // if (config.multitenancy?.enabled) {
+    //   core.http.registerOnPreResponse((request, preResponse, toolkit) => {
+    //     addTenantParameterToResolvedShortLink(request);
+    //     return toolkit.next();
+    //   });
+    // }
 
     // Register server side APIs
     defineRoutes(router);
-    defineAuthTypeRoutes(router, config);
+    // defineAuthTypeRoutes(router, config);
 
-    // set up multi-tenant routes
-    if (config.multitenancy?.enabled) {
-      setupMultitenantRoutes(router, securitySessionStorageFactory, this.securityClient);
-    }
+    // // set up multi-tenant routes
+    // if (config.multitenancy?.enabled) {
+    //   setupMultitenantRoutes(router, securitySessionStorageFactory, this.securityClient);
+    // }
 
-    if (config.multitenancy.enabled && config.multitenancy.enable_aggregation_view) {
-      core.savedObjects.addClientWrapper(
-        2,
-        'security-saved-object-client-wrapper',
-        this.savedObjectClientWrapper.wrapperFactory
-      );
-    }
+    // if (config.multitenancy.enabled && config.multitenancy.enable_aggregation_view) {
+    //   core.savedObjects.addClientWrapper(
+    //     2,
+    //     'security-saved-object-client-wrapper',
+    //     this.savedObjectClientWrapper.wrapperFactory
+    //   );
+    // }
 
-    const service = new ReadonlyService(
-      this.logger,
-      this.securityClient,
-      auth,
-      securitySessionStorageFactory,
-      config
-    );
+    // const service = new ReadonlyService(
+    //   this.logger,
+    //   this.securityClient,
+    //   auth,
+    //   securitySessionStorageFactory,
+    //   config
+    // );
 
-    core.security.registerReadonlyService(service);
+    // core.security.registerReadonlyService(service);
 
     return {
       config$,
@@ -169,34 +153,34 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
   public async start(core: CoreStart) {
     this.logger.debug('opendistro_security: Started');
 
-    const config$ = this.initializerContext.config.create<SecurityPluginConfigType>();
-    const config = await config$.pipe(first()).toPromise();
+    // const config$ = this.initializerContext.config.create<SecurityPluginConfigType>();
+    // const config = await config$.pipe(first()).toPromise();
 
-    this.savedObjectClientWrapper.httpStart = core.http;
-    this.savedObjectClientWrapper.config = config;
+    // this.savedObjectClientWrapper.httpStart = core.http;
+    // this.savedObjectClientWrapper.config = config;
 
-    if (config.multitenancy?.enabled) {
-      const globalConfig$: Observable<SharedGlobalConfig> = this.initializerContext.config.legacy
-        .globalConfig$;
-      const globalConfig: SharedGlobalConfig = await globalConfig$.pipe(first()).toPromise();
-      const opensearchDashboardsIndex = globalConfig.opensearchDashboards.index;
-      const typeRegistry: ISavedObjectTypeRegistry = core.savedObjects.getTypeRegistry();
-      const esClient = core.opensearch.client.asInternalUser;
-      const migrationClient = createMigrationOpenSearchClient(esClient, this.logger);
+    // if (config.multitenancy?.enabled) {
+    //   const globalConfig$: Observable<SharedGlobalConfig> = this.initializerContext.config.legacy
+    //     .globalConfig$;
+    //   const globalConfig: SharedGlobalConfig = await globalConfig$.pipe(first()).toPromise();
+    //   const opensearchDashboardsIndex = globalConfig.opensearchDashboards.index;
+    //   const typeRegistry: ISavedObjectTypeRegistry = core.savedObjects.getTypeRegistry();
+    //   const esClient = core.opensearch.client.asInternalUser;
+    //   const migrationClient = createMigrationOpenSearchClient(esClient, this.logger);
 
-      setupIndexTemplate(esClient, opensearchDashboardsIndex, typeRegistry, this.logger);
+    //   setupIndexTemplate(esClient, opensearchDashboardsIndex, typeRegistry, this.logger);
 
-      const serializer: SavedObjectsSerializer = core.savedObjects.createSerializer();
-      const opensearchDashboardsVersion = this.initializerContext.env.packageInfo.version;
-      migrateTenantIndices(
-        opensearchDashboardsVersion,
-        migrationClient,
-        this.securityClient,
-        typeRegistry,
-        serializer,
-        this.logger
-      );
-    }
+    //   const serializer: SavedObjectsSerializer = core.savedObjects.createSerializer();
+    //   const opensearchDashboardsVersion = this.initializerContext.env.packageInfo.version;
+    //   migrateTenantIndices(
+    //     opensearchDashboardsVersion,
+    //     migrationClient,
+    //     this.securityClient,
+    //     typeRegistry,
+    //     serializer,
+    //     this.logger
+    //   );
+    // }
 
     return {
       http: core.http,

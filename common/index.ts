@@ -13,8 +13,8 @@
  *   permissions and limitations under the License.
  */
 
-export const PLUGIN_ID = 'opensearchDashboardsSecurity';
-export const PLUGIN_NAME = 'security-dashboards-plugin';
+export const PLUGIN_ID = 'opensearchDashboardsSecurityPages';
+export const PLUGIN_NAME = 'security-pages-plugin';
 
 export const APP_ID_LOGIN = 'login';
 export const APP_ID_CUSTOMERROR = 'customerror';
