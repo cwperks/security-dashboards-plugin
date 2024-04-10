@@ -246,7 +246,7 @@ export function defineRoutes(router: IRouter) {
       request,
       response
     ): Promise<IOpenSearchDashboardsResponse<any | ResponseError>> => {
-      const client = context.security_plugin.esClient.asScoped(request);
+      const client = context.security_pages_plugin.esClient.asScoped(request);
       let esResp;
       try {
         if (request.params.resourceName === ResourceType.serviceAccounts.toLowerCase()) {
@@ -357,7 +357,7 @@ export function defineRoutes(router: IRouter) {
       request,
       response
     ): Promise<IOpenSearchDashboardsResponse<any | ResponseError>> => {
-      const client = context.security_plugin.esClient.asScoped(request);
+      const client = context.security_pages_plugin.esClient.asScoped(request);
       let esResp;
       try {
         esResp = await client.callAsCurrentUser('opensearch_security.getResource', {
@@ -391,7 +391,7 @@ export function defineRoutes(router: IRouter) {
       request,
       response
     ): Promise<IOpenSearchDashboardsResponse<any | ResponseError>> => {
-      const client = context.security_plugin.esClient.asScoped(request);
+      const client = context.security_pages_plugin.esClient.asScoped(request);
       let esResp;
       try {
         esResp = await client.callAsCurrentUser('opensearch_security.deleteResource', {
@@ -439,7 +439,7 @@ export function defineRoutes(router: IRouter) {
       } catch (error) {
         return response.badRequest({ body: error });
       }
-      const client = context.security_plugin.esClient.asScoped(request);
+      const client = context.security_pages_plugin.esClient.asScoped(request);
       let esResp;
       try {
         esResp = await client.callAsCurrentUser('opensearch_security.saveResourceWithoutId', {
@@ -483,7 +483,7 @@ export function defineRoutes(router: IRouter) {
       } catch (error) {
         return response.badRequest({ body: error });
       }
-      const client = context.security_plugin.esClient.asScoped(request);
+      const client = context.security_pages_plugin.esClient.asScoped(request);
       let esResp;
       try {
         esResp = await client.callAsCurrentUser('opensearch_security.saveResource', {
@@ -536,7 +536,7 @@ export function defineRoutes(router: IRouter) {
       request,
       response
     ): Promise<IOpenSearchDashboardsResponse<any | ResponseError>> => {
-      const client = context.security_plugin.esClient.asScoped(request);
+      const client = context.security_pages_plugin.esClient.asScoped(request);
       let esResp;
       try {
         esResp = await client.callAsCurrentUser('opensearch_security.authinfo');
@@ -560,7 +560,7 @@ export function defineRoutes(router: IRouter) {
       request,
       response
     ): Promise<IOpenSearchDashboardsResponse<any | ResponseError>> => {
-      const client = context.security_plugin.esClient.asScoped(request);
+      const client = context.security_pages_plugin.esClient.asScoped(request);
       let esResp;
       try {
         esResp = await client.callAsCurrentUser('opensearch_security.dashboardsinfo');
@@ -569,6 +569,7 @@ export function defineRoutes(router: IRouter) {
           body: esResp,
         });
       } catch (error) {
+        console.log("error: " + error);
         return errorResponse(response, error);
       }
     }
@@ -639,7 +640,7 @@ export function defineRoutes(router: IRouter) {
       request,
       response
     ): Promise<IOpenSearchDashboardsResponse<any | ResponseError>> => {
-      const client = context.security_plugin.esClient.asScoped(request);
+      const client = context.security_pages_plugin.esClient.asScoped(request);
 
       let esResp;
       try {
@@ -720,7 +721,7 @@ export function defineRoutes(router: IRouter) {
       },
     },
     async (context, request, response) => {
-      const client = context.security_plugin.esClient.asScoped(request);
+      const client = context.security_pages_plugin.esClient.asScoped(request);
       let esResp;
       try {
         esResp = await client.callAsCurrentUser('opensearch_security.saveAudit', {
@@ -748,7 +749,7 @@ export function defineRoutes(router: IRouter) {
       validate: false,
     },
     async (context, request, response) => {
-      const client = context.security_plugin.esClient.asScoped(request);
+      const client = context.security_pages_plugin.esClient.asScoped(request);
       let esResponse;
       try {
         esResponse = await client.callAsCurrentUser('opensearch_security.clearCache');
@@ -780,7 +781,7 @@ export function defineRoutes(router: IRouter) {
       validate: false,
     },
     async (context, request, response) => {
-      const client = context.security_plugin.esClient.asScoped(request);
+      const client = context.security_pages_plugin.esClient.asScoped(request);
       try {
         const esResponse = await client.callAsCurrentUser('opensearch_security.restapiinfo');
         return response.ok({
@@ -811,7 +812,7 @@ export function defineRoutes(router: IRouter) {
       },
     },
     async (context, request, response) => {
-      const client = context.security_plugin.esClient.asScoped(request);
+      const client = context.security_pages_plugin.esClient.asScoped(request);
       try {
         const esResponse = await client.callAsCurrentUser('opensearch_security.validateDls', {
           body: request.body,
@@ -841,7 +842,7 @@ export function defineRoutes(router: IRouter) {
       },
     },
     async (context, request, response) => {
-      const client = context.security_plugin.esClient.asScoped(request);
+      const client = context.security_pages_plugin.esClient.asScoped(request);
       try {
         const esResponse = await client.callAsCurrentUser('opensearch_security.getIndexMappings', {
           index: request.body.index.join(','),
@@ -870,7 +871,7 @@ export function defineRoutes(router: IRouter) {
       validate: false,
     },
     async (context, request, response) => {
-      const client = context.security_plugin.esClient.asScoped(request);
+      const client = context.security_pages_plugin.esClient.asScoped(request);
       try {
         const esResponse = await client.callAsCurrentUser('opensearch_security.indices');
         return response.ok({

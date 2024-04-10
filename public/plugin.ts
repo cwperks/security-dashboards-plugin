@@ -62,14 +62,14 @@ async function hasApiPermission(core: CoreSetup): Promise<boolean | undefined> {
   }
 }
 
-const DEFAULT_READONLY_ROLES = ['kibana_read_only'];
-const APP_ID_HOME = 'home';
-const APP_ID_DASHBOARDS = 'dashboards';
-// OpenSearchDashboards app is for legacy url migration
-const APP_ID_OPENSEARCH_DASHBOARDS = 'kibana';
-const APP_LIST_FOR_READONLY_ROLE = [APP_ID_HOME, APP_ID_DASHBOARDS, APP_ID_OPENSEARCH_DASHBOARDS];
-const GLOBAL_TENANT_RENDERING_TEXT = 'Global';
-const PRIVATE_TENANT_RENDERING_TEXT = 'Private';
+// const DEFAULT_READONLY_ROLES = ['kibana_read_only'];
+// const APP_ID_HOME = 'home';
+// const APP_ID_DASHBOARDS = 'dashboards';
+// // OpenSearchDashboards app is for legacy url migration
+// const APP_ID_OPENSEARCH_DASHBOARDS = 'kibana';
+// const APP_LIST_FOR_READONLY_ROLE = [APP_ID_HOME, APP_ID_DASHBOARDS, APP_ID_OPENSEARCH_DASHBOARDS];
+// const GLOBAL_TENANT_RENDERING_TEXT = 'Global';
+// const PRIVATE_TENANT_RENDERING_TEXT = 'Private';
 
 export class SecurityPlugin
   implements
@@ -90,11 +90,11 @@ export class SecurityPlugin
 
     const config = this.initializerContext.config.get<ClientConfigType>();
 
-    const accountInfo = (await fetchAccountInfoSafe(core.http))?.data;
-    const multitenancyEnabled = (await getDashboardsInfoSafe(core.http))?.multitenancy_enabled;
-    const isReadonly = accountInfo?.roles.some((role) =>
-      (config.readonly_mode?.roles || DEFAULT_READONLY_ROLES).includes(role)
-    );
+    // const accountInfo = (await fetchAccountInfoSafe(core.http))?.data;
+    // const multitenancyEnabled = (await getDashboardsInfoSafe(core.http))?.multitenancy_enabled;
+    // const isReadonly = accountInfo?.roles.some((role) =>
+    //   (config.readonly_mode?.roles || DEFAULT_READONLY_ROLES).includes(role)
+    // );
 
     if (apiPermission) {
       core.application.register({
@@ -130,77 +130,77 @@ export class SecurityPlugin
       }
     }
 
-    core.application.register({
-      id: APP_ID_LOGIN,
-      title: 'Security',
-      chromeless: true,
-      appRoute: LOGIN_PAGE_URI,
-      mount: async (params: AppMountParameters) => {
-        const { renderApp } = await import('./apps/login/login-app');
-        // @ts-ignore depsStart not used.
-        const [coreStart, depsStart] = await core.getStartServices();
-        return renderApp(coreStart, params, config);
-      },
-    });
+    // core.application.register({
+    //   id: APP_ID_LOGIN,
+    //   title: 'Security',
+    //   chromeless: true,
+    //   appRoute: LOGIN_PAGE_URI,
+    //   mount: async (params: AppMountParameters) => {
+    //     const { renderApp } = await import('./apps/login/login-app');
+    //     // @ts-ignore depsStart not used.
+    //     const [coreStart, depsStart] = await core.getStartServices();
+    //     return renderApp(coreStart, params, config);
+    //   },
+    // });
 
-    core.application.register({
-      id: APP_ID_CUSTOMERROR,
-      title: 'Security',
-      chromeless: true,
-      appRoute: CUSTOM_ERROR_PAGE_URI,
-      mount: async (params: AppMountParameters) => {
-        const { renderPage } = await import('./apps/customerror/custom-error');
-        const [coreStart] = await core.getStartServices();
-        return renderPage(coreStart, params, config);
-      },
-    });
+    // core.application.register({
+    //   id: APP_ID_CUSTOMERROR,
+    //   title: 'Security',
+    //   chromeless: true,
+    //   appRoute: CUSTOM_ERROR_PAGE_URI,
+    //   mount: async (params: AppMountParameters) => {
+    //     const { renderPage } = await import('./apps/customerror/custom-error');
+    //     const [coreStart] = await core.getStartServices();
+    //     return renderPage(coreStart, params, config);
+    //   },
+    // });
 
-    core.application.registerAppUpdater(
-      new BehaviorSubject<AppUpdater>((app) => {
-        if (!apiPermission && isReadonly && !APP_LIST_FOR_READONLY_ROLE.includes(app.id)) {
-          return {
-            status: AppStatus.inaccessible,
-          };
-        }
-      })
-    );
+    // core.application.registerAppUpdater(
+    //   new BehaviorSubject<AppUpdater>((app) => {
+    //     if (!apiPermission && isReadonly && !APP_LIST_FOR_READONLY_ROLE.includes(app.id)) {
+    //       return {
+    //         status: AppStatus.inaccessible,
+    //       };
+    //     }
+    //   })
+    // );
 
-    if (
-      multitenancyEnabled &&
-      config.multitenancy.enabled &&
-      config.multitenancy.enable_aggregation_view
-    ) {
-      deps.savedObjectsManagement.columns.register(
-        (tenantColumn as unknown) as SavedObjectsManagementColumn<string>
-      );
-      if (!!accountInfo) {
-        const namespacesToRegister = getNamespacesToRegister(accountInfo);
-        deps.savedObjectsManagement.namespaces.registerAlias('Tenant');
-        namespacesToRegister.forEach((ns) => {
-          deps.savedObjectsManagement.namespaces.register(ns as SavedObjectsManagementNamespace);
-        });
-      }
-    }
+    // if (
+    //   multitenancyEnabled &&
+    //   config.multitenancy.enabled &&
+    //   config.multitenancy.enable_aggregation_view
+    // ) {
+    //   deps.savedObjectsManagement.columns.register(
+    //     (tenantColumn as unknown) as SavedObjectsManagementColumn<string>
+    //   );
+    //   if (!!accountInfo) {
+    //     const namespacesToRegister = getNamespacesToRegister(accountInfo);
+    //     deps.savedObjectsManagement.namespaces.registerAlias('Tenant');
+    //     namespacesToRegister.forEach((ns) => {
+    //       deps.savedObjectsManagement.namespaces.register(ns as SavedObjectsManagementNamespace);
+    //     });
+    //   }
+    // }
 
-    // Return methods that should be available to other plugins
-    return {};
+    // // Return methods that should be available to other plugins
+    // return {};
   }
 
   public start(core: CoreStart, deps: SecurityPluginStartDependencies): SecurityPluginStart {
-    const config = this.initializerContext.config.get<ClientConfigType>();
+    // const config = this.initializerContext.config.get<ClientConfigType>();
 
-    setupTopNavButton(core, config);
+    // setupTopNavButton(core, config);
 
-    if (config.ui.autologout) {
-      // logout the user when getting 401 unauthorized, e.g. when session timed out.
-      core.http.intercept({
-        responseError: interceptError(config.auth.logout_url, window),
-      });
-    }
+    // if (config.ui.autologout) {
+    //   // logout the user when getting 401 unauthorized, e.g. when session timed out.
+    //   core.http.intercept({
+    //     responseError: interceptError(config.auth.logout_url, window),
+    //   });
+    // }
 
-    if (config.multitenancy.enabled) {
-      addTenantToShareURL(core);
-    }
+    // if (config.multitenancy.enabled) {
+    //   addTenantToShareURL(core);
+    // }
     return {};
   }
 
