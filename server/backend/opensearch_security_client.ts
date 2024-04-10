@@ -16,6 +16,7 @@
 import { ILegacyClusterClient, OpenSearchDashboardsRequest } from '../../../../src/core/server';
 import { User } from '../auth/user';
 import { TenancyConfigSettings } from '../../public/apps/configuration/panels/tenancy-config/types';
+import { AUTH_TYPE_PARAM, AuthType } from '../../common';
 
 export class SecurityClient {
   constructor(private readonly esClient: ILegacyClusterClient) {}
@@ -182,7 +183,9 @@ export class SecurityClient {
   public async getSamlHeader(request: OpenSearchDashboardsRequest) {
     try {
       // response is expected to be an error
-      await this.esClient.asScoped(request).callAsCurrentUser('opensearch_security.authinfo');
+      await this.esClient.asScoped(request).callAsCurrentUser('opensearch_security.authinfo', {
+        [AUTH_TYPE_PARAM]: AuthType.SAML,
+      });
     } catch (error: any) {
       // the error looks like
       // wwwAuthenticateDirective:
@@ -230,6 +233,7 @@ export class SecurityClient {
     try {
       return await this.esClient.asScoped().callAsCurrentUser('opensearch_security.authtoken', {
         body,
+        [AUTH_TYPE_PARAM]: AuthType.SAML,
       });
     } catch (error: any) {
       console.log(error);

@@ -178,6 +178,7 @@ export class SamlAuthentication extends AuthenticationType {
     toolkit: AuthToolkit
   ): IOpenSearchDashboardsResponse | AuthResult {
     if (this.isPageRequest(request)) {
+      console.log('redirectSAMlCapture');
       return this.redirectSAMlCapture(request, toolkit);
     } else {
       return response.unauthorized();
