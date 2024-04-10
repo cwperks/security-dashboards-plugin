@@ -13,23 +13,16 @@
  *   permissions and limitations under the License.
  */
 
-import { BehaviorSubject } from 'rxjs';
-import { SavedObjectsManagementColumn } from 'src/plugins/saved_objects_management/public';
 import { i18n } from '@osd/i18n';
 import {
   AppMountParameters,
-  AppStatus,
-  AppUpdater,
   CoreSetup,
   CoreStart,
   DEFAULT_APP_CATEGORIES,
   Plugin,
   PluginInitializerContext,
 } from '../../../src/core/public';
-import { APP_ID_LOGIN, CUSTOM_ERROR_PAGE_URI, LOGIN_PAGE_URI, PLUGIN_NAME } from '../common';
-import { APP_ID_CUSTOMERROR } from '../common';
-import { setupTopNavButton } from './apps/account/account-app';
-import { fetchAccountInfoSafe } from './apps/account/utils';
+import { PLUGIN_NAME } from '../common';
 import {
   API_ENDPOINT_PERMISSIONS_INFO,
   includeClusterPermissions,
@@ -46,10 +39,6 @@ import {
   SecurityPluginStart,
   SecurityPluginSetupDependencies,
 } from './types';
-import { addTenantToShareURL } from './services/shared-link';
-import { interceptError } from './utils/logout-utils';
-import { tenantColumn, getNamespacesToRegister } from './apps/configuration/utils/tenant-utils';
-import { getDashboardsInfoSafe } from './utils/dashboards-info-utils';
 
 async function hasApiPermission(core: CoreSetup): Promise<boolean | undefined> {
   try {

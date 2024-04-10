@@ -13,8 +13,6 @@
  *   permissions and limitations under the License.
  */
 
-import { first } from 'rxjs/operators';
-import { Observable } from 'rxjs';
 import {
   PluginInitializerContext,
   CoreSetup,
@@ -22,8 +20,6 @@ import {
   Plugin,
   Logger,
   ILegacyClusterClient,
-  SessionStorageFactory,
-  SharedGlobalConfig,
 } from '../../../src/core/server';
 
 import { SecurityPluginSetup, SecurityPluginStart } from './types';
@@ -31,21 +27,9 @@ import { defineRoutes } from './routes';
 import { SecurityPluginConfigType } from '.';
 import opensearchSecurityConfigurationPlugin from './backend/opensearch_security_configuration_plugin';
 import opensearchSecurityPlugin from './backend/opensearch_security_plugin';
-import { SecuritySessionCookie, getSecurityCookieOptions } from './session/security_cookie';
 import { SecurityClient } from './backend/opensearch_security_client';
-import {
-  SavedObjectsSerializer,
-  ISavedObjectTypeRegistry,
-} from '../../../src/core/server/saved_objects';
-import { setupIndexTemplate, migrateTenantIndices } from './multitenancy/tenant_index';
-import { IAuthenticationType } from './auth/types/authentication_type';
-import { getAuthenticationHandler } from './auth/auth_handler_factory';
-import { setupMultitenantRoutes } from './multitenancy/routes';
-import { defineAuthTypeRoutes } from './routes/auth_type_routes';
-import { createMigrationOpenSearchClient } from '../../../src/core/server/saved_objects/migrations/core';
+
 import { SecuritySavedObjectsClientWrapper } from './saved_objects/saved_objects_wrapper';
-import { addTenantParameterToResolvedShortLink } from './multitenancy/tenant_resolver';
-import { ReadonlyService } from './readonly/readonly_service';
 
 export interface SecurityPluginRequestContext {
   logger: Logger;

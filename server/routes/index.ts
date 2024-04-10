@@ -569,7 +569,7 @@ export function defineRoutes(router: IRouter) {
           body: esResp,
         });
       } catch (error) {
-        console.log("error: " + error);
+        console.log('error: ' + error);
         return errorResponse(response, error);
       }
     }
