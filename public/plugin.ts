@@ -96,39 +96,39 @@ export class SecurityPlugin
       (config.readonly_mode?.roles || DEFAULT_READONLY_ROLES).includes(role)
     );
 
-    if (apiPermission) {
-      core.application.register({
-        id: PLUGIN_NAME,
-        title: 'Security',
-        order: 9050,
-        mount: async (params: AppMountParameters) => {
-          const { renderApp } = await import('./apps/configuration/configuration-app');
-          const [coreStart, depsStart] = await core.getStartServices();
+    // if (apiPermission) {
+    //   core.application.register({
+    //     id: PLUGIN_NAME,
+    //     title: 'Security',
+    //     order: 9050,
+    //     mount: async (params: AppMountParameters) => {
+    //       const { renderApp } = await import('./apps/configuration/configuration-app');
+    //       const [coreStart, depsStart] = await core.getStartServices();
 
-          // merge OpenSearchDashboards yml configuration
-          includeClusterPermissions(config.clusterPermissions.include);
-          includeIndexPermissions(config.indexPermissions.include);
+    //       // merge OpenSearchDashboards yml configuration
+    //       includeClusterPermissions(config.clusterPermissions.include);
+    //       includeIndexPermissions(config.indexPermissions.include);
 
-          excludeFromDisabledTransportCategories(config.disabledTransportCategories.exclude);
-          excludeFromDisabledRestCategories(config.disabledRestCategories.exclude);
+    //       excludeFromDisabledTransportCategories(config.disabledTransportCategories.exclude);
+    //       excludeFromDisabledRestCategories(config.disabledRestCategories.exclude);
 
-          return renderApp(coreStart, depsStart as SecurityPluginStartDependencies, params, config);
-        },
-        category: DEFAULT_APP_CATEGORIES.management,
-      });
+    //       return renderApp(coreStart, depsStart as SecurityPluginStartDependencies, params, config);
+    //     },
+    //     category: DEFAULT_APP_CATEGORIES.management,
+    //   });
 
-      if (deps.managementOverview) {
-        deps.managementOverview.register({
-          id: PLUGIN_NAME,
-          title: 'Security',
-          order: 9050,
-          description: i18n.translate('security.securityDescription', {
-            defaultMessage:
-              'Configure how users access data in OpenSearch with authentication, access control and audit logging.',
-          }),
-        });
-      }
-    }
+    //   if (deps.managementOverview) {
+    //     deps.managementOverview.register({
+    //       id: PLUGIN_NAME,
+    //       title: 'Security',
+    //       order: 9050,
+    //       description: i18n.translate('security.securityDescription', {
+    //         defaultMessage:
+    //           'Configure how users access data in OpenSearch with authentication, access control and audit logging.',
+    //       }),
+    //     });
+    //   }
+    // }
 
     core.application.register({
       id: APP_ID_LOGIN,

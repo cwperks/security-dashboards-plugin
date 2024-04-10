@@ -94,7 +94,7 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
     const esClient: ILegacyClusterClient = core.opensearch.legacy.createClient(
       'opendistro_security',
       {
-        plugins: [opensearchSecurityConfigurationPlugin, opensearchSecurityPlugin],
+        plugins: [opensearchSecurityPlugin],
       }
     );
 
@@ -133,7 +133,7 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
     }
 
     // Register server side APIs
-    defineRoutes(router);
+    // defineRoutes(router);
     defineAuthTypeRoutes(router, config);
 
     // set up multi-tenant routes
