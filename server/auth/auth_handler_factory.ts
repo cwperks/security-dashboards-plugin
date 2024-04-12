@@ -57,8 +57,8 @@ export async function getAuthenticationHandler(
   logger: Logger
 ): Promise<IAuthenticationType> {
   let authHandlerType: IAuthHandlerConstructor;
-  if (typeof authType === 'string' || authType.length === 1) {
-    const currType = typeof authType === 'string' ? authType : authType[0];
+  if (typeof authType === 'string') {
+    const currType = authType;
     switch (currType.toLowerCase()) {
       case '':
       case AuthType.BASIC:
