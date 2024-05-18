@@ -215,17 +215,24 @@ export class SecurityPlugin
   public start(core: CoreStart, deps: SecurityPluginStartDependencies): SecurityPluginStart {
     const config = this.initializerContext.config.get<ClientConfigType>();
 
-    setupTopNavButton(core, config);
+    const manageSessionEnabled =
+      config.configuration?.session_management_enabled !== undefined
+        ? config.configuration?.session_management_enabled
+        : DEFAULT_MANAGE_SESSION_ENABLED;
 
-    if (config.ui.autologout) {
-      // logout the user when getting 401 unauthorized, e.g. when session timed out.
-      core.http.intercept({
-        responseError: interceptError(config.auth.logout_url, window),
-      });
-    }
+    if (manageSessionEnabled) {
+      setupTopNavButton(core, config);
 
-    if (config.multitenancy.enabled) {
-      addTenantToShareURL(core);
+      if (config.ui.autologout) {
+        // logout the user when getting 401 unauthorized, e.g. when session timed out.
+        core.http.intercept({
+          responseError: interceptError(config.auth.logout_url, window),
+        });
+      }
+
+      if (config.multitenancy.enabled) {
+        addTenantToShareURL(core);
+      }
     }
     return {};
   }
