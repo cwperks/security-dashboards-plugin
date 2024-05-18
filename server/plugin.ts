@@ -97,86 +97,101 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
 
     const router = core.http.createRouter();
 
-    const plugins = [opensearchSecurityPlugin];
+    const plugins = [];
+    if (config.configuration.session_management_enabled) {
+      plugins.push(opensearchSecurityPlugin);
+    }
     if (config.configuration.admin_pages_enabled) {
       plugins.push(opensearchSecurityConfigurationPlugin);
     }
 
-    const esClient: ILegacyClusterClient = core.opensearch.legacy.createClient(
-      'opendistro_security',
-      {
-        plugins,
-      }
-    );
+    let handlerContextName = 'security_plugin';
+    let esClientName = 'opendistro_security';
+    if (!config.configuration.session_management_enabled) {
+      handlerContextName = 'security_admin_plugin';
+      esClientName = 'opendistro_security_admin';
+    }
+
+    const esClient: ILegacyClusterClient = core.opensearch.legacy.createClient(esClientName, {
+      plugins,
+    });
     if (dataSourceEnabled) {
-      dataSource.registerCustomApiSchema(opensearchSecurityConfigurationPlugin);
-      dataSource.registerCustomApiSchema(opensearchSecurityPlugin);
+      if (config.configuration.admin_pages_enabled) {
+        dataSource.registerCustomApiSchema(opensearchSecurityConfigurationPlugin);
+      }
+      if (config.configuration.session_management_enabled) {
+        dataSource.registerCustomApiSchema(opensearchSecurityPlugin);
+      }
     }
 
     this.securityClient = new SecurityClient(esClient);
 
-    const securitySessionStorageFactory: SessionStorageFactory<SecuritySessionCookie> = await core.http.createCookieSessionStorageFactory<
-      SecuritySessionCookie
-    >(getSecurityCookieOptions(config));
-
     // put logger into route handler context, so that we don't need to pass througth parameters
-    core.http.registerRouteHandlerContext('security_plugin', (context, request) => {
+    core.http.registerRouteHandlerContext(handlerContextName, (context, request) => {
       return {
         logger: this.logger,
         esClient,
       };
     });
 
-    // setup auth
-    const auth: IAuthenticationType = await getAuthenticationHandler(
-      config.auth.type,
-      router,
-      config,
-      core,
-      esClient,
-      securitySessionStorageFactory,
-      this.logger
-    );
-    core.http.registerAuth(auth.authHandler);
+    if (config.configuration.session_management_enabled) {
+      const securitySessionStorageFactory: SessionStorageFactory<SecuritySessionCookie> = await core.http.createCookieSessionStorageFactory<
+        SecuritySessionCookie
+      >(getSecurityCookieOptions(config));
 
-    /* Here we check if multitenancy is enabled to ensure if it is, we insert the tenant info (security_tenant) into the resolved, short URL so the page can correctly load with the right tenant information [Fix for issue 1203](https://github.com/opensearch-project/security-dashboards-plugin/issues/1203 */
-    if (config.multitenancy?.enabled) {
-      core.http.registerOnPreResponse((request, preResponse, toolkit) => {
-        addTenantParameterToResolvedShortLink(request);
-        return toolkit.next();
-      });
+      // setup auth
+      const auth: IAuthenticationType = await getAuthenticationHandler(
+        config.auth.type,
+        router,
+        config,
+        core,
+        esClient,
+        securitySessionStorageFactory,
+        this.logger
+      );
+      core.http.registerAuth(auth.authHandler);
+
+      /* Here we check if multitenancy is enabled to ensure if it is, we insert the tenant info (security_tenant) into the resolved, short URL so the page can correctly load with the right tenant information [Fix for issue 1203](https://github.com/opensearch-project/security-dashboards-plugin/issues/1203 */
+      if (config.multitenancy?.enabled) {
+        core.http.registerOnPreResponse((request, preResponse, toolkit) => {
+          addTenantParameterToResolvedShortLink(request);
+          return toolkit.next();
+        });
+      }
+
+      // set up multi-tenant routes
+      if (config.multitenancy?.enabled) {
+        setupMultitenantRoutes(router, securitySessionStorageFactory, this.securityClient);
+      }
+
+      if (config.multitenancy.enabled && config.multitenancy.enable_aggregation_view) {
+        core.savedObjects.addClientWrapper(
+          2,
+          'security-saved-object-client-wrapper',
+          this.savedObjectClientWrapper.wrapperFactory
+        );
+      }
+
+      const service = new ReadonlyService(
+        this.logger,
+        this.securityClient,
+        auth,
+        securitySessionStorageFactory,
+        config
+      );
+
+      core.security.registerReadonlyService(service);
     }
 
     // Register server side APIs
     defineCommonRoutes(router, dataSourceEnabled);
-    defineRoutes(router, dataSourceEnabled);
+    if (config.configuration.session_management_enabled) {
+      defineRoutes(router, dataSourceEnabled);
+      defineAuthTypeRoutes(router, config);
+    }
     if (config.configuration.admin_pages_enabled) {
       defineSecurityConfigurationRoutes(router, dataSourceEnabled);
     }
-    defineAuthTypeRoutes(router, config);
-
-    // set up multi-tenant routes
-    if (config.multitenancy?.enabled) {
-      setupMultitenantRoutes(router, securitySessionStorageFactory, this.securityClient);
-    }
-
-    if (config.multitenancy.enabled && config.multitenancy.enable_aggregation_view) {
-      core.savedObjects.addClientWrapper(
-        2,
-        'security-saved-object-client-wrapper',
-        this.savedObjectClientWrapper.wrapperFactory
-      );
-    }
-
-    const service = new ReadonlyService(
-      this.logger,
-      this.securityClient,
-      auth,
-      securitySessionStorageFactory,
-      config
-    );
-
-    core.security.registerReadonlyService(service);
 
     return {
       config$,
