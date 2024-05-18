@@ -90,8 +90,7 @@ function validateEntityId(resourceName: string) {
 }
 
 // TODO: consider to extract entity CRUD operations and put it into a client class
-// Common routes are needed either if admin pages or disabled or session management is disabled
-export function defineCommonRoutes(router: IRouter, dataSourceEnabled: boolean) {
+export function defineRoutes(router: IRouter, dataSourceEnabled: boolean) {
   /**
    * Lists resources by resource name.
    *
@@ -447,9 +446,7 @@ export function defineCommonRoutes(router: IRouter, dataSourceEnabled: boolean) 
       }
     }
   );
-}
 
-export function defineRoutes(router: IRouter, dataSourceEnabled: boolean) {
   /**
    * Gets authentication info of the user.
    *
