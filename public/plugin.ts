@@ -64,6 +64,7 @@ async function hasApiPermission(core: CoreSetup): Promise<boolean | undefined> {
 
 const DEFAULT_READONLY_ROLES = ['kibana_read_only'];
 const DEFAULT_ADMIN_PAGES_ENABLED = true;
+const DEFAULT_MANAGE_SESSION_ENABLED = true;
 const APP_ID_HOME = 'home';
 const APP_ID_DASHBOARDS = 'dashboards';
 // OpenSearchDashboards app is for legacy url migration
@@ -88,6 +89,11 @@ export class SecurityPlugin
     deps: SecurityPluginSetupDependencies
   ): Promise<SecurityPluginSetup> {
     const config = this.initializerContext.config.get<ClientConfigType>();
+
+    const manageSessionEnabled =
+      config.configuration?.session_management_enabled !== undefined
+        ? config.configuration?.session_management_enabled
+        : DEFAULT_MANAGE_SESSION_ENABLED;
 
     const accountInfo = (await fetchAccountInfoSafe(core.http))?.data;
     const multitenancyEnabled = (await getDashboardsInfoSafe(core.http))?.multitenancy_enabled;

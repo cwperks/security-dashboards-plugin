@@ -115,6 +115,7 @@ export interface ClientConfigType {
   configuration: {
     enabled: boolean;
     admin_pages_enabled: boolean;
+    session_management_enabled: boolean;
   };
   clusterPermissions: {
     include: string[];
