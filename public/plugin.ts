@@ -95,12 +95,6 @@ export class SecurityPlugin
         ? config.configuration?.session_management_enabled
         : DEFAULT_MANAGE_SESSION_ENABLED;
 
-    const accountInfo = (await fetchAccountInfoSafe(core.http))?.data;
-    const multitenancyEnabled = (await getDashboardsInfoSafe(core.http))?.multitenancy_enabled;
-    const isReadonly = accountInfo?.roles.some((role) =>
-      (config.readonly_mode?.roles || DEFAULT_READONLY_ROLES).includes(role)
-    );
-
     const adminPagesEnabled =
       config.configuration?.admin_pages_enabled !== undefined
         ? config.configuration?.admin_pages_enabled
@@ -163,47 +157,55 @@ export class SecurityPlugin
       });
     }
 
-    core.application.register({
-      id: APP_ID_LOGIN,
-      title: 'Security',
-      chromeless: true,
-      appRoute: LOGIN_PAGE_URI,
-      mount: async (params: AppMountParameters) => {
-        const { renderApp } = await import('./apps/login/login-app');
-        // @ts-ignore depsStart not used.
-        const [coreStart, depsStart] = await core.getStartServices();
-        return renderApp(coreStart, params, config);
-      },
-    });
-
-    core.application.registerAppUpdater(
-      new BehaviorSubject<AppUpdater>((app) => {
-        let shouldDisableForReadOnly = isReadonly && !APP_LIST_FOR_READONLY_ROLE.includes(app.id);
-        if (apiPermission !== undefined) {
-          shouldDisableForReadOnly = !apiPermission && shouldDisableForReadOnly;
-        }
-        if (shouldDisableForReadOnly) {
-          return {
-            status: AppStatus.inaccessible,
-          };
-        }
-      })
-    );
-
-    if (
-      multitenancyEnabled &&
-      config.multitenancy.enabled &&
-      config.multitenancy.enable_aggregation_view
-    ) {
-      deps.savedObjectsManagement.columns.register(
-        (tenantColumn as unknown) as SavedObjectsManagementColumn<string>
+    if (manageSessionEnabled) {
+      const accountInfo = (await fetchAccountInfoSafe(core.http))?.data;
+      const multitenancyEnabled = (await getDashboardsInfoSafe(core.http))?.multitenancy_enabled;
+      const isReadonly = accountInfo?.roles.some((role) =>
+        (config.readonly_mode?.roles || DEFAULT_READONLY_ROLES).includes(role)
       );
-      if (!!accountInfo) {
-        const namespacesToRegister = getNamespacesToRegister(accountInfo);
-        deps.savedObjectsManagement.namespaces.registerAlias('Tenant');
-        namespacesToRegister.forEach((ns) => {
-          deps.savedObjectsManagement.namespaces.register(ns as SavedObjectsManagementNamespace);
-        });
+
+      core.application.register({
+        id: APP_ID_LOGIN,
+        title: 'Security',
+        chromeless: true,
+        appRoute: LOGIN_PAGE_URI,
+        mount: async (params: AppMountParameters) => {
+          const { renderApp } = await import('./apps/login/login-app');
+          // @ts-ignore depsStart not used.
+          const [coreStart, depsStart] = await core.getStartServices();
+          return renderApp(coreStart, params, config);
+        },
+      });
+
+      core.application.registerAppUpdater(
+        new BehaviorSubject<AppUpdater>((app) => {
+          let shouldDisableForReadOnly = isReadonly && !APP_LIST_FOR_READONLY_ROLE.includes(app.id);
+          if (apiPermission !== undefined) {
+            shouldDisableForReadOnly = !apiPermission && shouldDisableForReadOnly;
+          }
+          if (shouldDisableForReadOnly) {
+            return {
+              status: AppStatus.inaccessible,
+            };
+          }
+        })
+      );
+
+      if (
+        multitenancyEnabled &&
+        config.multitenancy.enabled &&
+        config.multitenancy.enable_aggregation_view
+      ) {
+        deps.savedObjectsManagement.columns.register(
+          (tenantColumn as unknown) as SavedObjectsManagementColumn<string>
+        );
+        if (!!accountInfo) {
+          const namespacesToRegister = getNamespacesToRegister(accountInfo);
+          deps.savedObjectsManagement.namespaces.registerAlias('Tenant');
+          namespacesToRegister.forEach((ns) => {
+            deps.savedObjectsManagement.namespaces.register(ns as SavedObjectsManagementNamespace);
+          });
+        }
       }
     }
 
