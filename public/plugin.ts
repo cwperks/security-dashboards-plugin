@@ -103,7 +103,6 @@ export class SecurityPlugin
     let apiPermission: boolean | undefined;
     if (adminPagesEnabled) {
       apiPermission = await hasApiPermission(core);
-      console.log('apiPermission: ' + apiPermission);
       if (apiPermission) {
         core.application.register({
           id: PLUGIN_NAME,
