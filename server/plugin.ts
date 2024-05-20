@@ -31,6 +31,7 @@ import { defineRoutes, defineSecurityConfigurationRoutes } from './routes';
 import { SecurityPluginConfigType } from '.';
 import opensearchSecurityConfigurationPlugin from './backend/opensearch_security_configuration_plugin';
 import opensearchSecurityPlugin from './backend/opensearch_security_plugin';
+import opensearchSecurityCommonPlugin from './backend/opensearch_security_common_plugin';
 import { SecuritySessionCookie, getSecurityCookieOptions } from './session/security_cookie';
 import { SecurityClient } from './backend/opensearch_security_client';
 import {
@@ -97,7 +98,7 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
 
     const router = core.http.createRouter();
 
-    const plugins = [];
+    const plugins = [opensearchSecurityCommonPlugin];
     if (config.configuration.session_management_enabled) {
       plugins.push(opensearchSecurityPlugin);
     }
