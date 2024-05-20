@@ -89,6 +89,202 @@ function validateEntityId(resourceName: string) {
   }
 }
 
+export function defineCommonRoutes(router: IRouter, dataSourceEnabled: boolean) {
+  /**
+   * Lists resources by resource name.
+   *
+   * The response format is:
+   * {
+   *   "total": <total_entity_count>,
+   *   "data": {
+   *     "entity_id_1": { <entity_structure> },
+   *     "entity_id_2": { <entity_structure> },
+   *     ...
+   *   }
+   * }
+   *
+   * e.g. when listing internal users, response may look like:
+   * {
+   *   "total": 2,
+   *   "data": {
+   *     "api_test_user2": {
+   *       "hash": "",
+   *       "reserved": false,
+   *       "hidden": false,
+   *       "backend_roles": [],
+   *       "attributes": {},
+   *       "description": "",
+   *       "static": false
+   *     },
+   *     "api_test_user1": {
+   *       "hash": "",
+   *       "reserved": false,
+   *       "hidden": false,
+   *       "backend_roles": [],
+   *       "attributes": {},
+   *       "static": false
+   *     }
+   * }
+   *
+   * when listing action groups, response will look like:
+   * {
+   *   "total": 2,
+   *   "data": {
+   *     "read": {
+   *       "reserved": true,
+   *       "hidden": false,
+   *       "allowed_actions": ["indices:data/read*", "indices:admin/mappings/fields/get*"],
+   *       "type": "index",
+   *       "description": "Allow all read operations",
+   *       "static": false
+   *     },
+   *     "cluster_all": {
+   *       "reserved": true,
+   *       "hidden": false,
+   *       "allowed_actions": ["cluster:*"],
+   *       "type": "cluster",
+   *       "description": "Allow everything on cluster level",
+   *       "static": false
+   *     }
+   * }
+   *
+   * role:
+   * {
+   *   "total": 2,
+   *   "data": {
+   *     "opensearch_dashboards_user": {
+   *       "reserved": true,
+   *       "hidden": false,
+   *       "description": "Provide the minimum permissions for a opensearch_dashboards user",
+   *       "cluster_permissions": ["cluster_composite_ops"],
+   *       "index_permissions": [{
+   *         "index_patterns": [".opensearch_dashboards", ".opensearch_dashboards-6", ".opensearch_dashboards_*"],
+   *         "fls": [],
+   *         "masked_fields": [],
+   *         "allowed_actions": ["read", "delete", "manage", "index"]
+   *       }, {
+   *         "index_patterns": [".tasks", ".management-beats"],
+   *         "fls": [],
+   *         "masked_fields": [],
+   *         "allowed_actions": ["indices_all"]
+   *       }],
+   *       "tenant_permissions": [],
+   *       "static": false
+   *     },
+   *     "all_access": {
+   *       "reserved": true,
+   *       "hidden": false,
+   *       "description": "Allow full access to all indices and all cluster APIs",
+   *       "cluster_permissions": ["*"],
+   *       "index_permissions": [{
+   *         "index_patterns": ["*"],
+   *         "fls": [],
+   *         "masked_fields": [],
+   *         "allowed_actions": ["*"]
+   *       }],
+   *       "tenant_permissions": [{
+   *         "tenant_patterns": ["*"],
+   *         "allowed_actions": ["opensearch_dashboards_all_write"]
+   *       }],
+   *       "static": false
+   *     }
+   *   }
+   * }
+   *
+   * rolesmapping:
+   * {
+   *   "total": 2,
+   *   "data": {
+   *     "security_manager": {
+   *       "reserved": false,
+   *       "hidden": false,
+   *       "backend_roles": [],
+   *       "hosts": [],
+   *       "users": ["zengyan", "admin"],
+   *       "and_backend_roles": []
+   *     },
+   *     "all_access": {
+   *       "reserved": false,
+   *       "hidden": false,
+   *       "backend_roles": [],
+   *       "hosts": [],
+   *       "users": ["zengyan", "admin", "indextest"],
+   *       "and_backend_roles": []
+   *     }
+   *   }
+   * }
+   *
+   * tenants:
+   * {
+   *   "total": 2,
+   *   "data": {
+   *     "global_tenant": {
+   *       "reserved": true,
+   *       "hidden": false,
+   *       "description": "Global tenant",
+   *       "static": false
+   *     },
+   *     "test tenant": {
+   *       "reserved": false,
+   *       "hidden": false,
+   *       "description": "tenant description",
+   *       "static": false
+   *     }
+   *   }
+   * }
+   */
+  router.get(
+    {
+      path: `${API_PREFIX}/${CONFIGURATION_API_PREFIX}/{resourceName}`,
+      validate: {
+        params: schema.object({
+          resourceName: schema.string(),
+        }),
+        query: schema.object({
+          dataSourceId: schema.maybe(schema.string()),
+        }),
+      },
+    },
+    async (
+      context,
+      request,
+      response
+    ): Promise<IOpenSearchDashboardsResponse<any | ResponseError>> => {
+      const client = context.security_plugin.esClient.asScoped(request);
+      let esResp;
+      try {
+        if (request.params.resourceName === ResourceType.serviceAccounts.toLowerCase()) {
+          esResp = await client.callAsCurrentUser('opensearch_security.listServiceAccounts');
+        } else if (request.params.resourceName === 'internalaccounts') {
+          esResp = await wrapRouteWithDataSource(
+            dataSourceEnabled,
+            context,
+            request,
+            'opensearch_security.listInternalAccounts'
+          );
+        } else {
+          esResp = await wrapRouteWithDataSource(
+            dataSourceEnabled,
+            context,
+            request,
+            'opensearch_security.listResource',
+            { resourceName: request.params.resourceName }
+          );
+        }
+        return response.ok({
+          body: {
+            total: Object.keys(esResp).length,
+            data: esResp,
+          },
+        });
+      } catch (error) {
+        console.log(JSON.stringify(error));
+        return errorResponse(response, error);
+      }
+    }
+  );
+}
+
 // TODO: consider to extract entity CRUD operations and put it into a client class
 export function defineRoutes(router: IRouter, dataSourceEnabled: boolean) {
   /**
@@ -358,200 +554,6 @@ export function defineRoutes(router: IRouter, dataSourceEnabled: boolean) {
 }
 
 export function defineSecurityConfigurationRoutes(router: IRouter, dataSourceEnabled: boolean) {
-  /**
-   * Lists resources by resource name.
-   *
-   * The response format is:
-   * {
-   *   "total": <total_entity_count>,
-   *   "data": {
-   *     "entity_id_1": { <entity_structure> },
-   *     "entity_id_2": { <entity_structure> },
-   *     ...
-   *   }
-   * }
-   *
-   * e.g. when listing internal users, response may look like:
-   * {
-   *   "total": 2,
-   *   "data": {
-   *     "api_test_user2": {
-   *       "hash": "",
-   *       "reserved": false,
-   *       "hidden": false,
-   *       "backend_roles": [],
-   *       "attributes": {},
-   *       "description": "",
-   *       "static": false
-   *     },
-   *     "api_test_user1": {
-   *       "hash": "",
-   *       "reserved": false,
-   *       "hidden": false,
-   *       "backend_roles": [],
-   *       "attributes": {},
-   *       "static": false
-   *     }
-   * }
-   *
-   * when listing action groups, response will look like:
-   * {
-   *   "total": 2,
-   *   "data": {
-   *     "read": {
-   *       "reserved": true,
-   *       "hidden": false,
-   *       "allowed_actions": ["indices:data/read*", "indices:admin/mappings/fields/get*"],
-   *       "type": "index",
-   *       "description": "Allow all read operations",
-   *       "static": false
-   *     },
-   *     "cluster_all": {
-   *       "reserved": true,
-   *       "hidden": false,
-   *       "allowed_actions": ["cluster:*"],
-   *       "type": "cluster",
-   *       "description": "Allow everything on cluster level",
-   *       "static": false
-   *     }
-   * }
-   *
-   * role:
-   * {
-   *   "total": 2,
-   *   "data": {
-   *     "opensearch_dashboards_user": {
-   *       "reserved": true,
-   *       "hidden": false,
-   *       "description": "Provide the minimum permissions for a opensearch_dashboards user",
-   *       "cluster_permissions": ["cluster_composite_ops"],
-   *       "index_permissions": [{
-   *         "index_patterns": [".opensearch_dashboards", ".opensearch_dashboards-6", ".opensearch_dashboards_*"],
-   *         "fls": [],
-   *         "masked_fields": [],
-   *         "allowed_actions": ["read", "delete", "manage", "index"]
-   *       }, {
-   *         "index_patterns": [".tasks", ".management-beats"],
-   *         "fls": [],
-   *         "masked_fields": [],
-   *         "allowed_actions": ["indices_all"]
-   *       }],
-   *       "tenant_permissions": [],
-   *       "static": false
-   *     },
-   *     "all_access": {
-   *       "reserved": true,
-   *       "hidden": false,
-   *       "description": "Allow full access to all indices and all cluster APIs",
-   *       "cluster_permissions": ["*"],
-   *       "index_permissions": [{
-   *         "index_patterns": ["*"],
-   *         "fls": [],
-   *         "masked_fields": [],
-   *         "allowed_actions": ["*"]
-   *       }],
-   *       "tenant_permissions": [{
-   *         "tenant_patterns": ["*"],
-   *         "allowed_actions": ["opensearch_dashboards_all_write"]
-   *       }],
-   *       "static": false
-   *     }
-   *   }
-   * }
-   *
-   * rolesmapping:
-   * {
-   *   "total": 2,
-   *   "data": {
-   *     "security_manager": {
-   *       "reserved": false,
-   *       "hidden": false,
-   *       "backend_roles": [],
-   *       "hosts": [],
-   *       "users": ["zengyan", "admin"],
-   *       "and_backend_roles": []
-   *     },
-   *     "all_access": {
-   *       "reserved": false,
-   *       "hidden": false,
-   *       "backend_roles": [],
-   *       "hosts": [],
-   *       "users": ["zengyan", "admin", "indextest"],
-   *       "and_backend_roles": []
-   *     }
-   *   }
-   * }
-   *
-   * tenants:
-   * {
-   *   "total": 2,
-   *   "data": {
-   *     "global_tenant": {
-   *       "reserved": true,
-   *       "hidden": false,
-   *       "description": "Global tenant",
-   *       "static": false
-   *     },
-   *     "test tenant": {
-   *       "reserved": false,
-   *       "hidden": false,
-   *       "description": "tenant description",
-   *       "static": false
-   *     }
-   *   }
-   * }
-   */
-  router.get(
-    {
-      path: `${API_PREFIX}/${CONFIGURATION_API_PREFIX}/{resourceName}`,
-      validate: {
-        params: schema.object({
-          resourceName: schema.string(),
-        }),
-        query: schema.object({
-          dataSourceId: schema.maybe(schema.string()),
-        }),
-      },
-    },
-    async (
-      context,
-      request,
-      response
-    ): Promise<IOpenSearchDashboardsResponse<any | ResponseError>> => {
-      const client = context.security_plugin.esClient.asScoped(request);
-      let esResp;
-      try {
-        if (request.params.resourceName === ResourceType.serviceAccounts.toLowerCase()) {
-          esResp = await client.callAsCurrentUser('opensearch_security.listServiceAccounts');
-        } else if (request.params.resourceName === 'internalaccounts') {
-          esResp = await wrapRouteWithDataSource(
-            dataSourceEnabled,
-            context,
-            request,
-            'opensearch_security.listInternalAccounts'
-          );
-        } else {
-          esResp = await wrapRouteWithDataSource(
-            dataSourceEnabled,
-            context,
-            request,
-            'opensearch_security.listResource',
-            { resourceName: request.params.resourceName }
-          );
-        }
-        return response.ok({
-          body: {
-            total: Object.keys(esResp).length,
-            data: esResp,
-          },
-        });
-      } catch (error) {
-        console.log(JSON.stringify(error));
-        return errorResponse(response, error);
-      }
-    }
-  );
-
   /**
    * Deletes an entity by id.
    */

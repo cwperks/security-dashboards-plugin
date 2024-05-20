@@ -27,7 +27,7 @@ import {
 } from '../../../src/core/server';
 
 import { SecurityPluginSetup, SecurityPluginStart } from './types';
-import { defineRoutes, defineSecurityConfigurationRoutes } from './routes';
+import { defineRoutes, defineCommonRoutes, defineSecurityConfigurationRoutes } from './routes';
 import { SecurityPluginConfigType } from '.';
 import opensearchSecurityConfigurationPlugin from './backend/opensearch_security_configuration_plugin';
 import opensearchSecurityPlugin from './backend/opensearch_security_plugin';
@@ -184,6 +184,7 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
       core.security.registerReadonlyService(service);
     }
 
+    defineCommonRoutes(router, dataSourceEnabled);
     // Register server side APIs
     if (config.configuration.session_management_enabled) {
       defineRoutes(router, dataSourceEnabled);
