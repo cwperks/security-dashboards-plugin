@@ -31,7 +31,6 @@ import { defineRoutes, defineSecurityConfigurationRoutes } from './routes';
 import { SecurityPluginConfigType } from '.';
 import opensearchSecurityConfigurationPlugin from './backend/opensearch_security_configuration_plugin';
 import opensearchSecurityPlugin from './backend/opensearch_security_plugin';
-import opensearchSecurityCommonPlugin from './backend/opensearch_security_common_plugin';
 import { SecuritySessionCookie, getSecurityCookieOptions } from './session/security_cookie';
 import { SecurityClient } from './backend/opensearch_security_client';
 import {
@@ -60,7 +59,7 @@ export interface SecurityPluginSetupDependencies {
 
 declare module 'opensearch-dashboards/server' {
   interface RequestHandlerContext {
-    security_plugin: SecurityPluginRequestContext;
+    security_admin_plugin: SecurityPluginRequestContext;
   }
 }
 
@@ -98,7 +97,7 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
 
     const router = core.http.createRouter();
 
-    const plugins = [opensearchSecurityCommonPlugin];
+    const plugins = [];
     if (config.configuration.session_management_enabled) {
       plugins.push(opensearchSecurityPlugin);
     }
@@ -106,16 +105,12 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
       plugins.push(opensearchSecurityConfigurationPlugin);
     }
 
-    let handlerContextName = 'security_plugin';
-    let esClientName = 'opendistro_security';
-    if (!config.configuration.session_management_enabled) {
-      handlerContextName = 'security_admin_plugin';
-      esClientName = 'opendistro_security_admin';
-    }
-
-    const esClient: ILegacyClusterClient = core.opensearch.legacy.createClient(esClientName, {
-      plugins,
-    });
+    const esClient: ILegacyClusterClient = core.opensearch.legacy.createClient(
+      'opendistro_security',
+      {
+        plugins,
+      }
+    );
     if (dataSourceEnabled) {
       if (config.configuration.admin_pages_enabled) {
         dataSource.registerCustomApiSchema(opensearchSecurityConfigurationPlugin);
@@ -128,12 +123,17 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
     this.securityClient = new SecurityClient(esClient);
 
     // put logger into route handler context, so that we don't need to pass througth parameters
-    core.http.registerRouteHandlerContext(handlerContextName, (context, request) => {
-      return {
-        logger: this.logger,
-        esClient,
-      };
-    });
+    core.http.registerRouteHandlerContext(
+      !config.configuration.session_management_enabled
+        ? 'security_admin_plugin'
+        : 'security_plugin',
+      (context, request) => {
+        return {
+          logger: this.logger,
+          esClient,
+        };
+      }
+    );
 
     if (config.configuration.session_management_enabled) {
       const securitySessionStorageFactory: SessionStorageFactory<SecuritySessionCookie> = await core.http.createCookieSessionStorageFactory<

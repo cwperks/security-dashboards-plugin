@@ -875,7 +875,10 @@ export function defineSecurityConfigurationRoutes(router: IRouter, dataSourceEna
       },
     },
     async (context, request, response) => {
-      const client = context.security_plugin.esClient.asScoped(request);
+      const handlerContext = context.security_plugin
+        ? context.security_plugin
+        : context.security_admin_plugin;
+      const client = handlerContext.esClient.asScoped(request);
       try {
         const esResponse = await client.callAsCurrentUser('opensearch_security.validateDls', {
           body: request.body,
@@ -905,7 +908,10 @@ export function defineSecurityConfigurationRoutes(router: IRouter, dataSourceEna
       },
     },
     async (context, request, response) => {
-      const client = context.security_plugin.esClient.asScoped(request);
+      const handlerContext = context.security_plugin
+        ? context.security_plugin
+        : context.security_admin_plugin;
+      const client = handlerContext.esClient.asScoped(request);
       try {
         const esResponse = await client.callAsCurrentUser('opensearch_security.getIndexMappings', {
           index: request.body.index.join(','),
@@ -934,7 +940,10 @@ export function defineSecurityConfigurationRoutes(router: IRouter, dataSourceEna
       validate: false,
     },
     async (context, request, response) => {
-      const client = context.security_plugin.esClient.asScoped(request);
+      const handlerContext = context.security_plugin
+        ? context.security_plugin
+        : context.security_admin_plugin;
+      const client = handlerContext.esClient.asScoped(request);
       try {
         const esResponse = await client.callAsCurrentUser('opensearch_security.indices');
         return response.ok({
@@ -960,7 +969,10 @@ const wrapRouteWithDataSource = async (
   body?: Record<string, string>
 ) => {
   if (!dataSourceEnabled || !request.query?.dataSourceId) {
-    const client = context.security_plugin.esClient.asScoped(request);
+    const handlerContext = context.security_plugin
+      ? context.security_plugin
+      : context.security_admin_plugin;
+    const client = handlerContext.esClient.asScoped(request);
     return await client.callAsCurrentUser(endpoint, body);
   } else {
     const client = context.dataSource.opensearch.legacy.getClient(request.query?.dataSourceId);
