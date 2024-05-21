@@ -233,7 +233,13 @@ export function defineCommonRoutes(router: IRouter, dataSourceEnabled: boolean) 
    *   }
    * }
    */
-  try {
+  const existingRoute = router
+    .getRoutes()
+    .find(
+      (r) =>
+        r.method === 'get' && r.path === `${API_PREFIX}/${CONFIGURATION_API_PREFIX}/{resourceName}`
+    );
+  if (!existingRoute) {
     router.get(
       {
         path: `${API_PREFIX}/${CONFIGURATION_API_PREFIX}/{resourceName}`,
@@ -284,8 +290,6 @@ export function defineCommonRoutes(router: IRouter, dataSourceEnabled: boolean) 
         }
       }
     );
-  } catch (e) {
-    console.log('Caught exception while registering route: ' + e);
   }
 }
 
