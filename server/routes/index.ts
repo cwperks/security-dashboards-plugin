@@ -233,56 +233,60 @@ export function defineCommonRoutes(router: IRouter, dataSourceEnabled: boolean) 
    *   }
    * }
    */
-  router.get(
-    {
-      path: `${API_PREFIX}/${CONFIGURATION_API_PREFIX}/{resourceName}`,
-      validate: {
-        params: schema.object({
-          resourceName: schema.string(),
-        }),
-        query: schema.object({
-          dataSourceId: schema.maybe(schema.string()),
-        }),
+  try {
+    router.get(
+      {
+        path: `${API_PREFIX}/${CONFIGURATION_API_PREFIX}/{resourceName}`,
+        validate: {
+          params: schema.object({
+            resourceName: schema.string(),
+          }),
+          query: schema.object({
+            dataSourceId: schema.maybe(schema.string()),
+          }),
+        },
       },
-    },
-    async (
-      context,
-      request,
-      response
-    ): Promise<IOpenSearchDashboardsResponse<any | ResponseError>> => {
-      const client = context.security_plugin.esClient.asScoped(request);
-      let esResp;
-      try {
-        if (request.params.resourceName === ResourceType.serviceAccounts.toLowerCase()) {
-          esResp = await client.callAsCurrentUser('opensearch_security.listServiceAccounts');
-        } else if (request.params.resourceName === 'internalaccounts') {
-          esResp = await wrapRouteWithDataSource(
-            dataSourceEnabled,
-            context,
-            request,
-            'opensearch_security.listInternalAccounts'
-          );
-        } else {
-          esResp = await wrapRouteWithDataSource(
-            dataSourceEnabled,
-            context,
-            request,
-            'opensearch_security.listResource',
-            { resourceName: request.params.resourceName }
-          );
+      async (
+        context,
+        request,
+        response
+      ): Promise<IOpenSearchDashboardsResponse<any | ResponseError>> => {
+        const client = context.security_plugin.esClient.asScoped(request);
+        let esResp;
+        try {
+          if (request.params.resourceName === ResourceType.serviceAccounts.toLowerCase()) {
+            esResp = await client.callAsCurrentUser('opensearch_security.listServiceAccounts');
+          } else if (request.params.resourceName === 'internalaccounts') {
+            esResp = await wrapRouteWithDataSource(
+              dataSourceEnabled,
+              context,
+              request,
+              'opensearch_security.listInternalAccounts'
+            );
+          } else {
+            esResp = await wrapRouteWithDataSource(
+              dataSourceEnabled,
+              context,
+              request,
+              'opensearch_security.listResource',
+              { resourceName: request.params.resourceName }
+            );
+          }
+          return response.ok({
+            body: {
+              total: Object.keys(esResp).length,
+              data: esResp,
+            },
+          });
+        } catch (error) {
+          console.log(JSON.stringify(error));
+          return errorResponse(response, error);
         }
-        return response.ok({
-          body: {
-            total: Object.keys(esResp).length,
-            data: esResp,
-          },
-        });
-      } catch (error) {
-        console.log(JSON.stringify(error));
-        return errorResponse(response, error);
       }
-    }
-  );
+    );
+  } catch (e) {
+    console.log('Caught exception while registering route: ' + e);
+  }
 }
 
 // TODO: consider to extract entity CRUD operations and put it into a client class
