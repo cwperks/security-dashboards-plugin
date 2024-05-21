@@ -15,6 +15,7 @@
 
 import { first } from 'rxjs/operators';
 import { Observable } from 'rxjs';
+import { inspect } from 'util';
 import {
   PluginInitializerContext,
   CoreSetup,
@@ -123,17 +124,12 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
     this.securityClient = new SecurityClient(esClient);
 
     // put logger into route handler context, so that we don't need to pass througth parameters
-    core.http.registerRouteHandlerContext(
-      !config.configuration.session_management_enabled
-        ? 'security_admin_plugin'
-        : 'security_plugin',
-      (context, request) => {
-        return {
-          logger: this.logger,
-          esClient,
-        };
-      }
-    );
+    core.http.registerRouteHandlerContext('security_plugin', (context, request) => {
+      return {
+        logger: this.logger,
+        esClient,
+      };
+    });
 
     if (config.configuration.session_management_enabled) {
       const securitySessionStorageFactory: SessionStorageFactory<SecuritySessionCookie> = await core.http.createCookieSessionStorageFactory<
