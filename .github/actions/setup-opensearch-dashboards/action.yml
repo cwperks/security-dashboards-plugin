@@ -174,28 +174,28 @@ runs:
         echo 'opensearch_security_admin.configuration.session_management_enabled: false' >> ./OpenSearch-Dashboards/config/opensearch_dashboards.yml
       shell: bash
 
-    # - name: Create opensearch_dashboards.json for security admin dashboards plugin
-    #     if: ${{ runner.os == 'Linux' }}
-    #     run: |
-    #       rm ./OpenSearch-Dashboards/plugins/security-admin-dashboards-plugin/opensearch_dashboards.json
-    #       cat << 'EOT' > ./OpenSearch-Dashboards/plugins/security-admin-dashboards-plugin/opensearch_dashboards.json
-    #       {
-    #         "id": "securityAdminDashboards",
-    #         "version": "3.0.0.0",
-    #         "opensearchDashboardsVersion": "3.0.0",
-    #         "configPath": [
-    #           "opensearch_security_admin"
-    #         ],
-    #         "requiredPlugins": [
-    #           "navigation",
-    #           "savedObjectsManagement"
-    #         ],
-    #         "optionalPlugins": [
-    #           "managementOverview",
-    #           "dataSource",
-    #           "dataSourceManagement"
-    #         ],
-    #         "server": true,
-    #         "ui": true
-    #       }
-    #       EOT
+    - name: Create opensearch_dashboards.json for security admin dashboards plugin
+      if: ${{ runner.os == 'Linux' }}
+      run: |
+        rm ./OpenSearch-Dashboards/plugins/security-admin-dashboards-plugin/opensearch_dashboards.json
+        cat << 'EOT' > ./OpenSearch-Dashboards/plugins/security-admin-dashboards-plugin/opensearch_dashboards.json
+        {
+          "id": "securityAdminDashboards",
+          "version": "3.0.0.0",
+          "opensearchDashboardsVersion": "3.0.0",
+          "configPath": [
+            "opensearch_security_admin"
+          ],
+          "requiredPlugins": [
+            "navigation",
+            "savedObjectsManagement"
+          ],
+          "optionalPlugins": [
+            "managementOverview",
+            "dataSource",
+            "dataSourceManagement"
+          ],
+          "server": true,
+          "ui": true
+        }
+        EOT
