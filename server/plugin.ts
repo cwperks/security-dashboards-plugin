@@ -103,21 +103,15 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
       defineAuthTypeRoutes(router, config);
     }
 
-    const plugins = [opensearchSecurityPlugin, opensearchSecurityConfigurationPlugin];
-
     const esClient: ILegacyClusterClient = core.opensearch.legacy.createClient(
       'opendistro_security',
       {
-        plugins,
+        plugins: [opensearchSecurityConfigurationPlugin, opensearchSecurityPlugin],
       }
     );
     if (dataSourceEnabled) {
-      if (config.configuration.admin_pages_enabled) {
-        dataSource.registerCustomApiSchema(opensearchSecurityConfigurationPlugin);
-      }
-      if (config.configuration.session_management_enabled) {
-        dataSource.registerCustomApiSchema(opensearchSecurityPlugin);
-      }
+      dataSource.registerCustomApiSchema(opensearchSecurityConfigurationPlugin);
+      dataSource.registerCustomApiSchema(opensearchSecurityPlugin);
     }
 
     this.securityClient = new SecurityClient(esClient);
