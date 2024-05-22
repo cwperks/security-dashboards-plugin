@@ -176,6 +176,7 @@ runs:
 
     - name: Create opensearch_dashboards.json for security admin dashboards plugin
       if: ${{ runner.os == 'Linux' }}
+      shell: bash
       run: |
         rm ./OpenSearch-Dashboards/plugins/security-admin-dashboards-plugin/opensearch_dashboards.json
         cat << 'EOT' > ./OpenSearch-Dashboards/plugins/security-admin-dashboards-plugin/opensearch_dashboards.json
