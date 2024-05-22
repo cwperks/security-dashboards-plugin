@@ -59,7 +59,7 @@ export interface SecurityPluginSetupDependencies {
 
 declare module 'opensearch-dashboards/server' {
   interface RequestHandlerContext {
-    security_admin_plugin: SecurityPluginRequestContext;
+    security_plugin: SecurityPluginRequestContext;
   }
 }
 
@@ -97,13 +97,13 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
 
     const router = core.http.createRouter();
 
-    const plugins = [];
-    if (config.configuration.session_management_enabled) {
-      plugins.push(opensearchSecurityPlugin);
+    // Register server side APIs
+    if (router.getRoutes().length === 0) {
+      defineRoutes(router, dataSourceEnabled);
+      defineAuthTypeRoutes(router, config);
     }
-    if (config.configuration.admin_pages_enabled) {
-      plugins.push(opensearchSecurityConfigurationPlugin);
-    }
+
+    const plugins = [opensearchSecurityPlugin, opensearchSecurityConfigurationPlugin];
 
     const esClient: ILegacyClusterClient = core.opensearch.legacy.createClient(
       'opendistro_security',
@@ -178,10 +178,6 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
 
       core.security.registerReadonlyService(service);
     }
-
-    // Register server side APIs
-    defineRoutes(router, dataSourceEnabled);
-    defineAuthTypeRoutes(router, config);
 
     return {
       config$,
