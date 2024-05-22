@@ -15,7 +15,6 @@
 
 import { first } from 'rxjs/operators';
 import { Observable } from 'rxjs';
-import { inspect } from 'util';
 import {
   PluginInitializerContext,
   CoreSetup,
@@ -28,7 +27,7 @@ import {
 } from '../../../src/core/server';
 
 import { SecurityPluginSetup, SecurityPluginStart } from './types';
-import { defineRoutes, defineCommonRoutes, defineSecurityConfigurationRoutes } from './routes';
+import { defineRoutes } from './routes';
 import { SecurityPluginConfigType } from '.';
 import opensearchSecurityConfigurationPlugin from './backend/opensearch_security_configuration_plugin';
 import opensearchSecurityPlugin from './backend/opensearch_security_plugin';
@@ -180,15 +179,9 @@ export class SecurityPlugin implements Plugin<SecurityPluginSetup, SecurityPlugi
       core.security.registerReadonlyService(service);
     }
 
-    defineCommonRoutes(router, dataSourceEnabled);
     // Register server side APIs
-    if (config.configuration.session_management_enabled) {
-      defineRoutes(router, dataSourceEnabled);
-      defineAuthTypeRoutes(router, config);
-    }
-    if (config.configuration.admin_pages_enabled) {
-      defineSecurityConfigurationRoutes(router, dataSourceEnabled);
-    }
+    defineRoutes(router, dataSourceEnabled);
+    defineAuthTypeRoutes(router, config);
 
     return {
       config$,
