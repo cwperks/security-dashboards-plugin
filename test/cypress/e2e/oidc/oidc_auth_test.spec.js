@@ -69,7 +69,7 @@ describe('Log in via OIDC', () => {
   });
 
   it('Login to Dashboard with Hash', () => {
-    const urlWithHash = `http://localhost:5601${basePath}/app/security-dashboards-plugin#/getstarted`;
+    const urlWithHash = `http://localhost:5601${basePath}/app/security-admin-dashboards-plugin#/getstarted`;
 
     cy.visit(urlWithHash, {
       failOnStatusCode: false,

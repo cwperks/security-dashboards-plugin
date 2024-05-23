@@ -115,8 +115,8 @@ runs:
       if: ${{ runner.os == 'Linux' }}
       shell: bash
       run: |
-        rm ./OpenSearch-Dashboards/plugins/security-dashboards-plugin/opensearch_dashboards.json
-        cat << 'EOT' > ./OpenSearch-Dashboards/plugins/security-dashboards-plugin/opensearch_dashboards.json
+        rm ./OpenSearch-Dashboards/plugins/security-admin-dashboards-plugin/opensearch_dashboards.json
+        cat << 'EOT' > ./OpenSearch-Dashboards/plugins/security-admin-dashboards-plugin/opensearch_dashboards.json
         {
           "id": "securityAdminDashboards",
           "version": "3.0.0.0",
