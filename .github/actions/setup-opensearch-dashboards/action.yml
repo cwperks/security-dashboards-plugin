@@ -236,6 +236,11 @@ runs:
         echo 'opensearch_security_admin.configuration.session_management_enabled: false' >> ./OpenSearch-Dashboards/config/opensearch_dashboards.yml
       shell: bash
 
+    - name: Print contents
+      run: |
+        cat ./OpenSearch-Dashboards/config/opensearch_dashboards.yml
+      shell: bash
+
     - name: Create opensearch_dashboards.json for security admin dashboards plugin
       if: ${{ runner.os == 'Linux' }}
       shell: bash
