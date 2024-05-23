@@ -93,7 +93,7 @@ describe('Multi-datasources enabled', () => {
   it('Checks Get Started Tab', () => {
     // Remote cluster purge cache
     cy.visit(
-      `http://localhost:5601/app/security-admin-dashboards-plugin${externalDataSourceUrl}#/getstarted`
+      `http://localhost:5601/app/security-dashboards-plugin${externalDataSourceUrl}#/getstarted`
     );
 
     cy.contains('h1', 'Get started');
@@ -106,9 +106,7 @@ describe('Multi-datasources enabled', () => {
   });
 
   it('Checks Auth Tab', () => {
-    cy.visit(
-      `http://localhost:5601/app/security-admin-dashboards-plugin${externalDataSourceUrl}#/auth`
-    );
+    cy.visit(`http://localhost:5601/app/security-dashboards-plugin${externalDataSourceUrl}#/auth`);
 
     cy.get('.panel-header-count').first().invoke('text').should('contain', '(1)');
   });
@@ -127,7 +125,7 @@ describe('Multi-datasources enabled', () => {
       },
     }).then(() => {
       cy.visit(
-        `http://localhost:5601/app/security-admin-dashboards-plugin${externalDataSourceUrl}#/users`
+        `http://localhost:5601/app/security-dashboards-plugin${externalDataSourceUrl}#/users`
       );
 
       cy.get('[data-test-subj="tableHeaderCell_username_0"]').click();
@@ -147,7 +145,7 @@ describe('Multi-datasources enabled', () => {
       },
     }).then(() => {
       cy.visit(
-        `http://localhost:5601/app/security-admin-dashboards-plugin${externalDataSourceUrl}#/permissions`
+        `http://localhost:5601/app/security-dashboards-plugin${externalDataSourceUrl}#/permissions`
       );
 
       // Permission exists on the remote data source
@@ -158,9 +156,7 @@ describe('Multi-datasources enabled', () => {
 
   it('Checks Tenancy Tab', () => {
     // Datasource is locked to local cluster for tenancy tab
-    cy.visit(
-      `http://localhost:5601/app/security-admin-dashboards-plugin${localDataSourceUrl}#/tenants`
-    );
+    cy.visit(`http://localhost:5601/app/security-dashboards-plugin${localDataSourceUrl}#/tenants`);
 
     cy.contains('h1', 'Dashboards multi-tenancy');
     cy.get('[data-test-subj="dataSourceViewButton"]').should('contain', 'Local cluster');
@@ -169,7 +165,7 @@ describe('Multi-datasources enabled', () => {
   it('Checks Service Accounts Tab', () => {
     // Datasource is locked to local cluster for service accounts tab
     cy.visit(
-      `http://localhost:5601/app/security-admin-dashboards-plugin${localDataSourceUrl}#/serviceAccounts`
+      `http://localhost:5601/app/security-dashboards-plugin${localDataSourceUrl}#/serviceAccounts`
     );
 
     cy.get('[data-test-subj="dataSourceViewButton"]').should('contain', 'Local cluster');
@@ -211,7 +207,7 @@ describe('Multi-datasources enabled', () => {
       },
     }).then(() => {
       cy.visit(
-        `http://localhost:5601/app/security-admin-dashboards-plugin${externalDataSourceUrl}#/auditLogging`
+        `http://localhost:5601/app/security-dashboards-plugin${externalDataSourceUrl}#/auditLogging`
       );
       cy.get('[class="euiSwitch__label"]').should('contain', 'Disabled');
     });
@@ -231,7 +227,7 @@ describe('Multi-datasources enabled', () => {
       },
     }).then(() => {
       cy.visit(
-        `http://localhost:5601/app/security-admin-dashboards-plugin${externalDataSourceUrl}#/roles`
+        `http://localhost:5601/app/security-dashboards-plugin${externalDataSourceUrl}#/roles`
       );
 
       cy.get('[data-test-subj="dataSourceSelectableButton"]').should('contain', '9202');

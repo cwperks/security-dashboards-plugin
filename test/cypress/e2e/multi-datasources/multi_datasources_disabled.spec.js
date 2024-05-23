@@ -27,7 +27,7 @@ describe('Multi-datasources disabled', () => {
 
   it('Checks Get Started Tab', () => {
     // Remote cluster purge cache
-    cy.visit(`http://localhost:5601/app/security-admin-dashboards-plugin#/getstarted`);
+    cy.visit(`http://localhost:5601/app/security-dashboards-plugin#/getstarted`);
 
     cy.contains('h1', 'Get started');
     cy.get('[data-test-subj="dataSourceSelectableButton"]').should('not.exist');
