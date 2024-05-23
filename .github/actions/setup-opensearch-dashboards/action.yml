@@ -111,6 +111,33 @@ runs:
       working-directory: OpenSearch-Dashboards
       shell: bash
 
+    - name: Create opensearch_dashboards.json for security admin dashboards plugin
+      if: ${{ runner.os == 'Linux' }}
+      shell: bash
+      run: |
+        rm ./OpenSearch-Dashboards/plugins/security-admin-dashboards-plugin/opensearch_dashboards.json
+        cat << 'EOT' > ./OpenSearch-Dashboards/plugins/security-admin-dashboards-plugin/opensearch_dashboards.json
+        {
+          "id": "securityAdminDashboards",
+          "version": "3.0.0.0",
+          "opensearchDashboardsVersion": "3.0.0",
+          "configPath": [
+            "opensearch_security_admin"
+          ],
+          "requiredPlugins": [
+            "navigation",
+            "savedObjectsManagement"
+          ],
+          "optionalPlugins": [
+            "managementOverview",
+            "dataSource",
+            "dataSourceManagement"
+          ],
+          "server": true,
+          "ui": true
+        }
+        EOT
+
     - name: Create package.json for security admin dashboards plugin
       if: ${{ runner.os == 'Linux' }}
       shell: bash
@@ -240,30 +267,3 @@ runs:
       run: |
         cat ./OpenSearch-Dashboards/config/opensearch_dashboards.yml
       shell: bash
-
-    - name: Create opensearch_dashboards.json for security admin dashboards plugin
-      if: ${{ runner.os == 'Linux' }}
-      shell: bash
-      run: |
-        rm ./OpenSearch-Dashboards/plugins/security-admin-dashboards-plugin/opensearch_dashboards.json
-        cat << 'EOT' > ./OpenSearch-Dashboards/plugins/security-admin-dashboards-plugin/opensearch_dashboards.json
-        {
-          "id": "securityAdminDashboards",
-          "version": "3.0.0.0",
-          "opensearchDashboardsVersion": "3.0.0",
-          "configPath": [
-            "opensearch_security_admin"
-          ],
-          "requiredPlugins": [
-            "navigation",
-            "savedObjectsManagement"
-          ],
-          "optionalPlugins": [
-            "managementOverview",
-            "dataSource",
-            "dataSourceManagement"
-          ],
-          "server": true,
-          "ui": true
-        }
-        EOT
