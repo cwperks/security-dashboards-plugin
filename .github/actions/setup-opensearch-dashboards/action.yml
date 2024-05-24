@@ -257,7 +257,7 @@ runs:
           mv ${{ inputs.opensearch_dashboards_yml }} ./OpenSearch-Dashboards/config/opensearch_dashboards.yml
       shell: bash
 
-    - name: Add to opensearch_dashboards.yml config
+    - name: Add to opensearch_dashboards.yml config file
       run: |
         echo 'opensearch_security.configuration.admin_pages_enabled: false' >> ./OpenSearch-Dashboards/config/opensearch_dashboards.yml
         echo 'opensearch_security_admin.configuration.session_management_enabled: false' >> ./OpenSearch-Dashboards/config/opensearch_dashboards.yml
