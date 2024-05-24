@@ -1,0 +1,170 @@
+name: 'Starts Dashboards with Plugin'
+description: 'Installs OpenSearch Dashboard with a plugin from github, then checks out the correct dashboards version for the plugin, configures npm/yarn, bootstraps Dashboards, and starts the instance'
+
+inputs:
+  plugin_name:
+    description: 'The name of the plugin to use, such as security-dashboards-plugin'
+    required: true
+
+  built_plugin_name:
+    description: 'The name of the plugin after building, if doing zip install'
+    required: false
+
+  built_plugin_suffix:
+    description: 'The suffix of the plugin after building, if doing zip instll. Leave empty to indicate default OSD build behavior'
+    required: false
+
+  install_zip:
+    description: 'Whether the setup should be done using the install plugin flow. Leave empty to indicate dev setup. Only applicable for linux for now'
+    required: false
+
+  plugin_repo:
+    description: 'The repo of the plugin to use. Leave empty to indicate the repo which is running this action'
+    required: false
+
+  opensearch_dashboards_yml:
+    description: 'The file to replace opensearch_dashboards.yml. Leave empty to use the default'
+    required: false
+
+  plugin_branch:
+    description: 'The branch of the repo of the plugin to use. Leave empty to indicate the branch which is running this action'
+    required: false
+
+outputs:
+  dashboards-directory:
+    description: "The directory where the dashboards has been configured"
+    value: ${{ steps.determine-dashboards-directory.outputs.dashboards-directory }}
+
+  dashboards-binary-directory:
+    description: "The directory of the dashboards binary that was configured"
+    value: ${{ steps.determine-dashboards-directory-zip-install.outputs.dashboards-directory }}
+
+  plugin-directory:
+    description: "The directory where the plugin has been configured"
+    value: ${{ steps.determine-plugin-directory.outputs.plugin-directory }}
+
+
+runs:
+  using: "composite"
+  steps:
+    - id: determine-dashboards-directory
+      if: ${{ inputs.install_zip != 'true' }}
+      run: echo "dashboards-directory=OpenSearch-Dashboards"  >> $GITHUB_OUTPUT
+      shell: bash
+
+    - id: determine-plugin-directory
+      run: echo "::set-output name=plugin-directory::./OpenSearch-Dashboards/plugins/${{ inputs.plugin_name }}"
+      shell: bash
+
+    - uses: actions/checkout@v2
+      with:
+        path: OpenSearch-Dashboards
+        repository: cwperks/OpenSearch-Dashboards
+        ref: 'support-repeated-plugin'
+        fetch-depth: 0
+        filter: |
+          cypress
+          test
+
+    - uses: actions/checkout@v2
+      with:
+        path: ${{ steps.determine-plugin-directory.outputs.plugin-directory }}
+
+    - id: osd-version
+      run: |
+        echo "::set-output name=osd-version::$(jq -r '.opensearchDashboards.version | split(".") | .[:2] | join(".")' package.json)"
+        echo "::set-output name=osd-x-version::$(jq -r '.opensearchDashboards.version | split(".") | .[0]' package.json).x"
+        echo "::set-output name=plugin-version::$(jq -r '.opensearchDashboardsVersion' opensearch_dashboards.json)"
+      working-directory: ${{ steps.determine-plugin-directory.outputs.plugin-directory }}
+      shell: bash
+
+    - id: branch-switch-if-possible
+      continue-on-error: true # Defaults onto main if the branch switch doesn't work
+      if: ${{ steps.osd-version.outputs.osd-version }}
+      run: git checkout ${{ steps.osd-version.outputs.osd-version }} || git checkout ${{ steps.osd-version.outputs.osd-x-version }}
+      working-directory: ./OpenSearch-Dashboards
+      shell: bash
+
+    - id: tool-versions
+      run: |
+        echo "node_version=$(cat .node-version)" >> $GITHUB_OUTPUT
+        echo "yarn_version=$(jq -r '.engines.yarn' package.json)" >> $GITHUB_OUTPUT
+      working-directory: OpenSearch-Dashboards
+      shell: bash
+
+    - uses: actions/setup-node@v1
+      with:
+        node-version: ${{ steps.tool-versions.outputs.node_version }}
+        registry-url: 'https://registry.npmjs.org'
+
+    - name: Setup Opensearch Dashboards
+      run: |
+        npm uninstall -g yarn
+        echo "Installing yarn ${{ steps.tool-versions.outputs.yarn_version }}"
+        npm i -g yarn@${{ steps.tool-versions.outputs.yarn_version }}
+        yarn cache clean
+        yarn add sha.js
+      working-directory: OpenSearch-Dashboards
+      shell: bash
+
+    - name: Bootstrap the OpenSearch Dashboard
+      uses: nick-fields/retry@v2
+      with:
+        timeout_minutes: 20
+        max_attempts: 2
+        command: yarn --cwd OpenSearch-Dashboards osd bootstrap --oss --single-version=loose # loose is passed in to ignore version conflicts on cypress version used in OSD and this repo
+
+    - name: Download OpenSearch for Linux
+      uses: peternied/download-file@v2
+      if: ${{ inputs.install_zip == 'true' && runner.os == 'Linux' }}
+      with:
+        url: https://ci.opensearch.org/ci/dbc/distribution-build-opensearch-dashboards/${{ steps.osd-version.outputs.plugin-version }}/latest/linux/x64/tar/builds/opensearch-dashboards/dist/opensearch-dashboards-min-${{ steps.osd-version.outputs.plugin-version }}-linux-x64.tar.gz
+
+    # Extract downloaded zip
+    - name: Extract downloaded tar
+      if: ${{ inputs.install_zip == 'true' && runner.os == 'Linux' }}
+      run: |
+        tar -xzf opensearch-*.tar.gz
+        rm -f opensearch-*.tar.gz
+      shell: bash
+
+    - id: determine-dashboards-directory-zip-install
+      if: ${{ inputs.install_zip == 'true' }}
+      run: echo "dashboards-directory=opensearch-dashboards-${{ steps.osd-version.outputs.plugin-version }}-linux-x64"  >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Build the plugin 
+      if: ${{ inputs.install_zip == 'true' }}
+      run: |
+          yarn build
+      working-directory: ${{ steps.determine-plugin-directory.outputs.plugin-directory }}
+      shell: bash
+
+    - name: Install the plugin zip
+      if: ${{ inputs.install_zip == 'true' && inputs.built_plugin_suffix == '' }}
+      run: | 
+        ${{ steps.determine-dashboards-directory-zip-install.outputs.dashboards-directory }}/bin/opensearch-dashboards-plugin install file:$(pwd)/OpenSearch-Dashboards/plugins/${{ inputs.plugin_name }}/build/${{ inputs.built_plugin_name }}-${{env.PLUGIN_VERSION}}.zip
+      shell: bash
+
+    - name: Install the plugin zip
+      if: ${{ inputs.install_zip == 'true' &&  inputs.built_plugin_suffix != '' }}
+      run: | 
+        ${{ steps.determine-dashboards-directory-zip-install.outputs.dashboards-directory }}/bin/opensearch-dashboards-plugin install file:$(pwd)/OpenSearch-Dashboards/plugins/${{ inputs.plugin_name }}/build/${{ inputs.built_plugin_name }}-${{inputs.built_plugin_suffix}}.zip
+      shell: bash
+
+    - name: Replace opensearch_dashboards.yml file if applicable binary
+      if: ${{ inputs.opensearch_dashboards_yml != '' && inputs.install_zip == 'true' }}
+      run: |
+          mv ${{ inputs.opensearch_dashboards_yml }} ${{ steps.determine-dashboards-directory-zip-install.outputs.dashboards-directory }}/config/opensearch_dashboards.yml
+      shell: bash
+
+    - name: Replace opensearch_dashboards.yml file if applicable dev
+      if: ${{ inputs.opensearch_dashboards_yml != '' && inputs.install_zip != 'true' }}
+      run: |
+          mv ${{ inputs.opensearch_dashboards_yml }} ./OpenSearch-Dashboards/config/opensearch_dashboards.yml
+      shell: bash
+
+    - name: Print contents
+      run: |
+        cat ./OpenSearch-Dashboards/config/opensearch_dashboards.yml
+      shell: bash

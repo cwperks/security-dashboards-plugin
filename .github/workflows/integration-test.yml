@@ -1,6 +1,6 @@
 name: Integration Tests
 
-on: [push, pull_request]
+on: [pull_request]
 
 env:
   TEST_BROWSER_HEADLESS: 1
@@ -82,6 +82,11 @@ jobs:
 
       - id: install-dashboards
         uses: ./.github/actions/setup-opensearch-dashboards
+        with:
+          plugin_name: security-dashboards-plugin
+
+      - id: install-dashboards
+        uses: ./.github/actions/setup-opensearch-dashboards-for-integ-tests
         with:
           plugin_name: security-dashboards-plugin
 
