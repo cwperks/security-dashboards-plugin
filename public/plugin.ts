@@ -63,6 +63,8 @@ async function hasApiPermission(core: CoreSetup): Promise<boolean | undefined> {
 }
 
 const DEFAULT_READONLY_ROLES = ['kibana_read_only'];
+const DEFAULT_ADMIN_PAGES_ENABLED = true;
+const DEFAULT_MANAGE_SESSION_ENABLED = true;
 const APP_ID_HOME = 'home';
 const APP_ID_DASHBOARDS = 'dashboards';
 // OpenSearchDashboards app is for legacy url migration
@@ -86,105 +88,123 @@ export class SecurityPlugin
     core: CoreSetup,
     deps: SecurityPluginSetupDependencies
   ): Promise<SecurityPluginSetup> {
-    const apiPermission = await hasApiPermission(core);
-
     const config = this.initializerContext.config.get<ClientConfigType>();
 
-    const accountInfo = (await fetchAccountInfoSafe(core.http))?.data;
-    const multitenancyEnabled = (await getDashboardsInfoSafe(core.http))?.multitenancy_enabled;
-    const isReadonly = accountInfo?.roles.some((role) =>
-      (config.readonly_mode?.roles || DEFAULT_READONLY_ROLES).includes(role)
-    );
+    const manageSessionEnabled =
+      config.configuration?.session_management_enabled !== undefined
+        ? config.configuration?.session_management_enabled
+        : DEFAULT_MANAGE_SESSION_ENABLED;
 
-    if (apiPermission) {
-      core.application.register({
-        id: PLUGIN_NAME,
-        title: 'Security',
-        order: 9050,
-        mount: async (params: AppMountParameters) => {
-          const { renderApp } = await import('./apps/configuration/configuration-app');
-          const [coreStart, depsStart] = await core.getStartServices();
+    const adminPagesEnabled =
+      config.configuration?.admin_pages_enabled !== undefined
+        ? config.configuration?.admin_pages_enabled
+        : DEFAULT_ADMIN_PAGES_ENABLED;
 
-          // merge OpenSearchDashboards yml configuration
-          includeClusterPermissions(config.clusterPermissions.include);
-          includeIndexPermissions(config.indexPermissions.include);
-
-          excludeFromDisabledTransportCategories(config.disabledTransportCategories.exclude);
-          excludeFromDisabledRestCategories(config.disabledRestCategories.exclude);
-
-          return renderApp(
-            coreStart,
-            depsStart as SecurityPluginStartDependencies,
-            params,
-            config,
-            deps.dataSourceManagement
-          );
-        },
-        category: DEFAULT_APP_CATEGORIES.management,
-      });
-
-      if (deps.managementOverview) {
-        deps.managementOverview.register({
+    let apiPermission: boolean | undefined;
+    if (adminPagesEnabled) {
+      apiPermission = await hasApiPermission(core);
+      if (apiPermission) {
+        core.application.register({
           id: PLUGIN_NAME,
           title: 'Security',
           order: 9050,
-          description: i18n.translate('security.securityDescription', {
-            defaultMessage:
-              'Configure how users access data in OpenSearch with authentication, access control and audit logging.',
-          }),
+          mount: async (params: AppMountParameters) => {
+            const { renderApp } = await import('./apps/configuration/configuration-app');
+            const [coreStart, depsStart] = await core.getStartServices();
+
+            // merge OpenSearchDashboards yml configuration
+            includeClusterPermissions(config.clusterPermissions.include);
+            includeIndexPermissions(config.indexPermissions.include);
+
+            excludeFromDisabledTransportCategories(config.disabledTransportCategories.exclude);
+            excludeFromDisabledRestCategories(config.disabledRestCategories.exclude);
+
+            return renderApp(
+              coreStart,
+              depsStart as SecurityPluginStartDependencies,
+              params,
+              config,
+              deps.dataSourceManagement
+            );
+          },
+          category: DEFAULT_APP_CATEGORIES.management,
         });
+
+        if (deps.managementOverview) {
+          deps.managementOverview.register({
+            id: PLUGIN_NAME,
+            title: 'Security',
+            order: 9050,
+            description: i18n.translate('security.securityDescription', {
+              defaultMessage:
+                'Configure how users access data in OpenSearch with authentication, access control and audit logging.',
+            }),
+          });
+        }
       }
+
+      core.application.register({
+        id: APP_ID_CUSTOMERROR,
+        title: 'Security',
+        chromeless: true,
+        appRoute: CUSTOM_ERROR_PAGE_URI,
+        mount: async (params: AppMountParameters) => {
+          const { renderPage } = await import('./apps/customerror/custom-error');
+          const [coreStart] = await core.getStartServices();
+          return renderPage(coreStart, params, config);
+        },
+      });
     }
 
-    core.application.register({
-      id: APP_ID_LOGIN,
-      title: 'Security',
-      chromeless: true,
-      appRoute: LOGIN_PAGE_URI,
-      mount: async (params: AppMountParameters) => {
-        const { renderApp } = await import('./apps/login/login-app');
-        // @ts-ignore depsStart not used.
-        const [coreStart, depsStart] = await core.getStartServices();
-        return renderApp(coreStart, params, config);
-      },
-    });
-
-    core.application.register({
-      id: APP_ID_CUSTOMERROR,
-      title: 'Security',
-      chromeless: true,
-      appRoute: CUSTOM_ERROR_PAGE_URI,
-      mount: async (params: AppMountParameters) => {
-        const { renderPage } = await import('./apps/customerror/custom-error');
-        const [coreStart] = await core.getStartServices();
-        return renderPage(coreStart, params, config);
-      },
-    });
-
-    core.application.registerAppUpdater(
-      new BehaviorSubject<AppUpdater>((app) => {
-        if (!apiPermission && isReadonly && !APP_LIST_FOR_READONLY_ROLE.includes(app.id)) {
-          return {
-            status: AppStatus.inaccessible,
-          };
-        }
-      })
-    );
-
-    if (
-      multitenancyEnabled &&
-      config.multitenancy.enabled &&
-      config.multitenancy.enable_aggregation_view
-    ) {
-      deps.savedObjectsManagement.columns.register(
-        (tenantColumn as unknown) as SavedObjectsManagementColumn<string>
+    if (manageSessionEnabled) {
+      const accountInfo = (await fetchAccountInfoSafe(core.http))?.data;
+      const multitenancyEnabled = (await getDashboardsInfoSafe(core.http))?.multitenancy_enabled;
+      const isReadonly = accountInfo?.roles.some((role) =>
+        (config.readonly_mode?.roles || DEFAULT_READONLY_ROLES).includes(role)
       );
-      if (!!accountInfo) {
-        const namespacesToRegister = getNamespacesToRegister(accountInfo);
-        deps.savedObjectsManagement.namespaces.registerAlias('Tenant');
-        namespacesToRegister.forEach((ns) => {
-          deps.savedObjectsManagement.namespaces.register(ns as SavedObjectsManagementNamespace);
-        });
+
+      core.application.register({
+        id: APP_ID_LOGIN,
+        title: 'Security',
+        chromeless: true,
+        appRoute: LOGIN_PAGE_URI,
+        mount: async (params: AppMountParameters) => {
+          const { renderApp } = await import('./apps/login/login-app');
+          // @ts-ignore depsStart not used.
+          const [coreStart, depsStart] = await core.getStartServices();
+          return renderApp(coreStart, params, config);
+        },
+      });
+
+      core.application.registerAppUpdater(
+        new BehaviorSubject<AppUpdater>((app) => {
+          let shouldDisableForReadOnly = isReadonly && !APP_LIST_FOR_READONLY_ROLE.includes(app.id);
+          if (apiPermission !== undefined) {
+            shouldDisableForReadOnly = !apiPermission && shouldDisableForReadOnly;
+          }
+          if (shouldDisableForReadOnly) {
+            return {
+              status: AppStatus.inaccessible,
+            };
+          }
+        })
+      );
+
+      if (
+        multitenancyEnabled &&
+        config.multitenancy.enabled &&
+        config.multitenancy.enable_aggregation_view
+      ) {
+        deps.savedObjectsManagement.columns.register(
+          (tenantColumn as unknown) as SavedObjectsManagementColumn<string>
+        );
+        if (!!accountInfo) {
+          const namespacesToRegister = getNamespacesToRegister(accountInfo);
+          deps.savedObjectsManagement.namespaces.registerAlias('Tenant');
+          namespacesToRegister.forEach((ns) => {
+            deps.savedObjectsManagement.namespaces.register(ns as SavedObjectsManagementNamespace);
+          });
+        }
       }
     }
 
@@ -195,17 +215,24 @@ export class SecurityPlugin
   public start(core: CoreStart, deps: SecurityPluginStartDependencies): SecurityPluginStart {
     const config = this.initializerContext.config.get<ClientConfigType>();
 
-    setupTopNavButton(core, config);
+    const manageSessionEnabled =
+      config.configuration?.session_management_enabled !== undefined
+        ? config.configuration?.session_management_enabled
+        : DEFAULT_MANAGE_SESSION_ENABLED;
 
-    if (config.ui.autologout) {
-      // logout the user when getting 401 unauthorized, e.g. when session timed out.
-      core.http.intercept({
-        responseError: interceptError(config.auth.logout_url, window),
-      });
-    }
+    if (manageSessionEnabled) {
+      setupTopNavButton(core, config);
 
-    if (config.multitenancy.enabled) {
-      addTenantToShareURL(core);
+      if (config.ui.autologout) {
+        // logout the user when getting 401 unauthorized, e.g. when session timed out.
+        core.http.intercept({
+          responseError: interceptError(config.auth.logout_url, window),
+        });
+      }
+
+      if (config.multitenancy.enabled) {
+        addTenantToShareURL(core);
+      }
     }
     return {};
   }

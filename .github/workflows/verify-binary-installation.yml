@@ -1,6 +1,6 @@
 name: 'Install Dashboards with Plugin via Binary'
 
-on: [push, pull_request]
+on: [pull_request]
 env:
   OPENSEARCH_VERSION: '3.0.0'
   CI: 1
@@ -67,7 +67,7 @@ jobs:
 
       - name: Run Dashboard with Security Dashboards Plugin
         id: setup-dashboards
-        uses: derek-ho/setup-opensearch-dashboards@v1
+        uses: ./.github/actions/setup-opensearch-dashboards
         with:
           plugin_name: security-dashboards-plugin
           built_plugin_name: security-dashboards

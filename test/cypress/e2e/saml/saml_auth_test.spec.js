@@ -82,7 +82,7 @@ describe('Log in via SAML', () => {
     localStorage.setItem('opendistro::security::tenant::saved', '"__user__"');
     localStorage.setItem('home:newThemeModal:show', 'false');
 
-    const urlWithHash = `http://localhost:5601${basePath}/app/security-dashboards-plugin#/getstarted`;
+    const urlWithHash = `http://localhost:5601${basePath}/app/security-admin-dashboards-plugin#/getstarted`;
 
     cy.visit(urlWithHash, {
       failOnStatusCode: false,

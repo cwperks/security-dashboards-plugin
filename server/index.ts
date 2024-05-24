@@ -158,6 +158,8 @@ export const configSchema = schema.object({
   }),
   configuration: schema.object({
     enabled: schema.boolean({ defaultValue: true }),
+    admin_pages_enabled: schema.boolean({ defaultValue: true }),
+    session_management_enabled: schema.boolean({ defaultValue: true }),
   }),
   accountinfo: schema.object({
     enabled: schema.boolean({ defaultValue: false }),
@@ -299,6 +301,7 @@ export const config: PluginConfigDescriptor<SecurityPluginConfigType> = {
     ui: true,
     multitenancy: true,
     readonly_mode: true,
+    configuration: true,
     clusterPermissions: true,
     indexPermissions: true,
     disabledTransportCategories: true,

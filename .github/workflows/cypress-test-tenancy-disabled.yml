@@ -1,6 +1,6 @@
 name: Cypress Tests Multitenancy Disabled
 
-on: [ push, pull_request ]
+on: [ pull_request ]
 
 env:
   TEST_BROWSER_HEADLESS: 1
@@ -70,7 +70,7 @@ jobs:
           EOT
 
       - name: Run Dashboard with Security Dashboards Plugin
-        uses: derek-ho/setup-opensearch-dashboards@v1
+        uses: ./.github/actions/setup-opensearch-dashboards
         with:
           plugin_name: security-dashboards-plugin
           opensearch_dashboards_yml: tenancy-disabled-opensearch-dashboards-config.yml
@@ -80,7 +80,7 @@ jobs:
           cd ./OpenSearch-Dashboards
           nohup yarn start --no-base-path --no-watch &
           sleep 500
-          git clone https://github.com/opensearch-project/opensearch-dashboards-functional-test.git
+          git clone -b security-admin-dashboards-plugin https://github.com/cwperks/opensearch-dashboards-functional-test.git
           cd opensearch-dashboards-functional-test
           npm install cypress --save-dev
-          yarn cypress:run-with-security --browser chrome --spec "cypress/integration/plugins/security-dashboards-plugin/inaccessible_tenancy_features.js"
+          yarn cypress:run-with-security --browser chrome --spec "cypress/integration/plugins/security/inaccessible_tenancy_features.js"
