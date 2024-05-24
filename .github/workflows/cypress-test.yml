@@ -68,6 +68,7 @@ jobs:
           opensearch_security.multitenancy.tenants.preferred: ["Private", "Global"]
           opensearch_security.readonly_mode.roles: ["kibana_read_only"]
           opensearch_security.cookie.secure: false
+          opensearch_security_admin.multitenancy.enabled: true
           EOT
 
       - name: Run Dashboard with Security Dashboards Plugin
