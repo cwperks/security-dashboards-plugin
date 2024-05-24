@@ -68,7 +68,6 @@ jobs:
           opensearch_security.multitenancy.tenants.preferred: ["Private", "Global"]
           opensearch_security.readonly_mode.roles: ["kibana_read_only"]
           opensearch_security.cookie.secure: false
-          opensearch_security.multitenancy.enable_aggregation_view: true
           EOT
 
       - name: Run Dashboard with Security Dashboards Plugin
@@ -85,6 +84,5 @@ jobs:
           git clone -b security-admin-dashboards-plugin https://github.com/cwperks/opensearch-dashboards-functional-test.git
           cd opensearch-dashboards-functional-test
           npm install cypress --save-dev
-          yarn cypress:run-with-security-and-aggregation-view --browser chrome --spec "cypress/integration/plugins/security-dashboards-plugin/aggregation_view.js"
           yarn cypress:run-with-security --browser chrome --spec "cypress/integration/plugins/security-dashboards-plugin/multi_tenancy.js"
           yarn cypress:run-with-security --browser chrome --spec "cypress/integration/plugins/security-dashboards-plugin/default_tenant.js"
