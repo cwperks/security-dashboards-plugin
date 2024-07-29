@@ -43,7 +43,9 @@ export class SamlAuthRoutes {
           query: schema.object({
             nextUrl: schema.maybe(
               schema.string({
-                validate: validateNextUrl,
+                validate: (nexturl) => {
+                  return validateNextUrl(nexturl, this.coreSetup.http.basePath.serverBasePath);
+                },
               })
             ),
           }),
