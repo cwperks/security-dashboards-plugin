@@ -35,6 +35,8 @@ import {
   OPENID_AUTH_LOGIN_WITH_FRAGMENT,
   SAML_AUTH_LOGIN_WITH_FRAGMENT,
 } from '../../../common';
+import { getDashboardsSignInOptions } from '../../utils/dashboards-info-utils';
+import { DashboardSignInOption } from '../configuration/types';
 import { getSavedTenant } from '../../utils/storage-utils';
 
 interface LoginPageDeps {
@@ -100,6 +102,21 @@ export function LoginPage(props: LoginPageDeps) {
   const [loginError, setloginError] = useState('');
   const [usernameValidationFailed, setUsernameValidationFailed] = useState(false);
   const [passwordValidationFailed, setPasswordValidationFailed] = useState(false);
+  const [dynamicSignInOptions, setDynamicSignInOptions] = React.useState<
+    DashboardSignInOption[] | null
+  >(null);
+
+  React.useEffect(() => {
+    const loadDynamicSignInOptions = async () => {
+      try {
+        setDynamicSignInOptions(await getDashboardsSignInOptions(props.http));
+      } catch (error) {
+        setDynamicSignInOptions(null);
+      }
+    };
+
+    loadDynamicSignInOptions();
+  }, [props.http]);
 
   let errorLabel: any = null;
   if (loginFailed) {
@@ -131,6 +148,10 @@ export function LoginPage(props: LoginPageDeps) {
     }
 
     try {
+      const isValid = await reValidateSignInOption(DashboardSignInOption.BASIC);
+      if (!isValid) {
+        return;
+      }
       await validateCurrentPassword(props.http, username, password);
       redirect(props.http.basePath.serverBasePath);
     } catch (error) {
@@ -154,9 +175,14 @@ export function LoginPage(props: LoginPageDeps) {
           data-test-subj="submit"
           aria-label={buttonId}
           size="s"
-          type="prime"
+          type="button"
           className={buttonConfig.buttonstyle || 'btn-login'}
-          href={loginEndPointWithPath}
+          onClick={async (event) => {
+            event.preventDefault();
+            if (await reValidateSignInOption(authType as DashboardSignInOption)) {
+              window.location.assign(loginEndPointWithPath);
+            }
+          }}
           iconType={buttonConfig.showbrandimage ? buttonConfig.brandimage : ''}
         >
           {buttonConfig.buttonname}
@@ -165,21 +191,62 @@ export function LoginPage(props: LoginPageDeps) {
     );
   };
 
+  const reValidateSignInOption = async (signInOption: DashboardSignInOption) => {
+    try {
+      const availableSignInOptions = await getDashboardsSignInOptions(props.http);
+
+      if (!availableSignInOptions.includes(signInOption)) {
+        window.location.reload();
+        return false;
+      }
+    } catch (error) {
+      return true;
+    }
+
+    return true;
+  };
+
+  const mapDynamicSignInOptionsToAuthTypes = (options: DashboardSignInOption[]) => {
+    return options
+      .map((option) => {
+        switch (option) {
+          case DashboardSignInOption.BASIC:
+            return AuthType.BASIC;
+          case DashboardSignInOption.OPEN_ID:
+            return AuthType.OPEN_ID;
+          case DashboardSignInOption.SAML:
+            return AuthType.SAML;
+          case DashboardSignInOption.ANONYMOUS:
+            return AuthType.ANONYMOUS;
+          default:
+            return undefined;
+        }
+      })
+      .filter((option): option is AuthType => Boolean(option));
+  };
+
   const formOptions = (options: string | string[]) => {
     let formBody = [];
     const formBodyOp = [];
-    let authOpts: string[] = [];
+    let authOpts: string[] =
+      dynamicSignInOptions && dynamicSignInOptions.length > 0
+        ? mapDynamicSignInOptionsToAuthTypes(dynamicSignInOptions)
+        : [];
 
-    // Convert auth options to a usable array
-    if (typeof options === 'string') {
-      if (options !== '') {
-        authOpts.push(options.toLowerCase());
-      }
-    } else if (!(options && options.length === 1 && options[0] === '')) {
-      authOpts = [...options];
-    }
     if (authOpts.length === 0) {
-      authOpts.push(AuthType.BASIC);
+      if (typeof options === 'string') {
+        if (options !== '') {
+          authOpts.push(options.toLowerCase());
+        }
+      } else if (!(options && options.length === 1 && options[0] === '')) {
+        authOpts = [...options];
+      }
+      if (authOpts.length === 0) {
+        authOpts.push(AuthType.BASIC);
+      }
+      if (props.config.auth.anonymous_auth_enabled && !authOpts.includes(AuthType.ANONYMOUS)) {
+        authOpts.push(AuthType.ANONYMOUS);
+      }
     }
 
     // Remove proxy and jwt from the list because they do not have a login button
@@ -232,13 +299,6 @@ export function LoginPage(props: LoginPageDeps) {
             </EuiCompressedFormRow>
           );
 
-          if (props.config.auth.anonymous_auth_enabled) {
-            const anonymousConfig = props.config.ui[AuthType.ANONYMOUS].login;
-            formBody.push(
-              renderLoginButton(AuthType.ANONYMOUS, ANONYMOUS_AUTH_LOGIN, anonymousConfig)
-            );
-          }
-
           if (authOpts.length > 1) {
             // Add a separator between the username/password form and the other login options
             formBody.push(<EuiSpacer size="xs" />);
@@ -259,6 +319,13 @@ export function LoginPage(props: LoginPageDeps) {
           const nextUrl = extractNextUrlFromWindowLocation();
           const samlAuthLoginUrl = SAML_AUTH_LOGIN_WITH_FRAGMENT + nextUrl;
           formBodyOp.push(renderLoginButton(AuthType.SAML, samlAuthLoginUrl, samlConfig));
+          break;
+        }
+        case AuthType.ANONYMOUS: {
+          const anonymousConfig = props.config.ui[AuthType.ANONYMOUS].login;
+          formBody.push(
+            renderLoginButton(AuthType.ANONYMOUS, ANONYMOUS_AUTH_LOGIN, anonymousConfig)
+          );
           break;
         }
         default: {

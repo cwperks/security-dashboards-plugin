@@ -56,6 +56,7 @@ export interface DashboardsInfo {
   private_tenant_enabled?: boolean;
   default_tenant: string;
   password_validation_error_message: string;
+  sign_in_options?: string[];
   resource_sharing_enabled?: boolean;
 }
 

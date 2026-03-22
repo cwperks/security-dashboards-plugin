@@ -25,6 +25,7 @@ import {
   ADMIN_PASSWORD,
   AUTHORIZATION_HEADER_NAME,
 } from '../constant';
+import { API_ENDPOINT_DASHBOARD_SIGNIN_OPTIONS } from '../../common';
 import { extractAuthCookie, getAuthCookie } from '../helper/cookie';
 import {
   createOrUpdateEntityAsAdmin,
@@ -399,6 +400,34 @@ describe('start OpenSearch Dashboards server', () => {
       .unset(AUTHORIZATION_HEADER_NAME)
       .set('Cookie', authCookie);
     expect(restApiInfoResponse.status).toEqual(200);
+  });
+
+  it('gets dashboard sign-in options without authentication', async () => {
+    const response = await osdTestServer.request
+      .get(root, API_ENDPOINT_DASHBOARD_SIGNIN_OPTIONS)
+      .unset(AUTHORIZATION_HEADER_NAME);
+
+    expect(response.status).toEqual(200);
+    expect(Array.isArray(response.body)).toEqual(true);
+    expect(response.body).toContain('basicauth');
+  });
+
+  it('updates dashboard sign-in options', async () => {
+    const currentOptionsResponse = await osdTestServer.request
+      .get(root, API_ENDPOINT_DASHBOARD_SIGNIN_OPTIONS)
+      .set(AUTHORIZATION_HEADER_NAME, ADMIN_CREDENTIALS);
+
+    expect(currentOptionsResponse.status).toEqual(200);
+
+    const response = await osdTestServer.request
+      .put(root, API_ENDPOINT_DASHBOARD_SIGNIN_OPTIONS)
+      .set(AUTHORIZATION_HEADER_NAME, ADMIN_CREDENTIALS)
+      .send({
+        sign_in_options: currentOptionsResponse.body,
+      });
+
+    expect(response.status).toEqual(200);
+    expect(response.body.message).toBeDefined();
   });
 
   it('index_mappings', async () => {

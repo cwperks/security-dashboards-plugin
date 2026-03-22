@@ -164,8 +164,7 @@ describe('Log in via SAML', () => {
       });
     }
 
-    cy.get('#private').should('be.enabled');
-    cy.get('#private').click({ force: true });
+    cy.get('#private').should('be.visible').and('be.enabled').click();
 
     cy.get('button[data-test-subj="confirm"]').click();
 
