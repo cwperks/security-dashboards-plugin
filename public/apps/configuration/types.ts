@@ -150,3 +150,16 @@ export interface FormRowDeps {
   helpLink?: string;
   helpText?: string;
 }
+
+export enum DashboardSignInOption {
+  BASIC = 'basicauth',
+  OPEN_ID = 'openid',
+  SAML = 'saml',
+  ANONYMOUS = 'anonymous',
+}
+
+export interface DashboardOption {
+  name: DashboardSignInOption;
+  displayName: string;
+  status: boolean;
+}

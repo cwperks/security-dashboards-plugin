@@ -14,7 +14,8 @@
  */
 
 import { HttpStart } from 'opensearch-dashboards/public';
-import { API_ENDPOINT_DASHBOARDSINFO } from '../../common';
+import { API_ENDPOINT_DASHBOARDSINFO, API_ENDPOINT_DASHBOARD_SIGNIN_OPTIONS } from '../../common';
+import { DashboardSignInOption } from '../apps/configuration/types';
 import { DashboardsInfo } from '../types';
 import { createLocalClusterRequestContext } from '../apps/configuration/utils/request-utils';
 
@@ -30,5 +31,25 @@ export async function getDashboardsInfoSafe(http: HttpStart): Promise<Dashboards
     http,
     url: API_ENDPOINT_DASHBOARDSINFO,
     ignores: [401],
+  });
+}
+
+export async function getDashboardsSignInOptions(http: HttpStart) {
+  return await createLocalClusterRequestContext().httpGet<DashboardSignInOption[]>({
+    http,
+    url: API_ENDPOINT_DASHBOARD_SIGNIN_OPTIONS,
+  });
+}
+
+export async function updateDashboardSignInOptions(
+  http: HttpStart,
+  signInOptions: DashboardSignInOption[]
+) {
+  return await createLocalClusterRequestContext().httpPut({
+    http,
+    url: API_ENDPOINT_DASHBOARD_SIGNIN_OPTIONS,
+    body: {
+      sign_in_options: signInOptions,
+    },
   });
 }
