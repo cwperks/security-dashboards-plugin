@@ -211,8 +211,9 @@ export function ManageAccessPanel({ http, objectId, objectType, currentUsername 
           value={generalAccess ?? ''}
           options={[
             { value: '', text: 'Private (only owner)' },
-            { value: 'view', text: 'Anyone can view' },
-            { value: 'edit', text: 'Anyone can edit' },
+            ...accessLevels
+              .filter((al) => !al.includes('full_access'))
+              .map((al) => ({ value: al, text: 'Anyone can ' + formatAccessLevel(al).toLowerCase() })),
           ]}
           onChange={(e) => setGeneralAccess(e.target.value || null)}
         />
