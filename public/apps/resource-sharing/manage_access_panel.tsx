@@ -76,6 +76,7 @@ export function ManageAccessPanel({ http, objectId, objectType, currentUsername 
   const [accessLevels, setAccessLevels] = useState<string[]>([]);
   const [generalAccess, setGeneralAccess] = useState<string | null>(null);
   const [entries, setEntries] = useState<AccessLevelEntry[]>([]);
+  const [initialEntries, setInitialEntries] = useState<AccessLevelEntry[]>([]);
   const [initialSignature, setInitialSignature] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [canShare, setCanShare] = useState(true);
@@ -86,10 +87,11 @@ export function ManageAccessPanel({ http, objectId, objectType, currentUsername 
     let cancelled = false;
     (async () => {
       try {
-        const [typesResp, sharingResp] = await Promise.all([
+        // Fetch types and current user's access (no share permission needed)
+        const [typesResp, accessResp] = await Promise.all([
           http.get(`${RESOURCE_API_BASE}/types`).catch(() => ({ types: [] })),
           http
-            .get(`${RESOURCE_API_BASE}/view`, {
+            .get(`${RESOURCE_API_BASE}/access`, {
               query: { resourceId: qualifiedId, resourceType: objectType },
             })
             .catch(() => null),
@@ -106,28 +108,42 @@ export function ManageAccessPanel({ http, objectId, objectType, currentUsername 
         setSupported(true);
         setAccessLevels(typeConfig.access_levels ?? []);
 
-        const shareWith = (sharingResp as any)?.sharing_info?.share_with;
-        const owner = (sharingResp as any)?.sharing_info?.created_by?.user;
-        setCanShare(!currentUsername || owner === currentUsername);
-        console.log('[ManageAccess] objectId:', objectId, 'objectType:', objectType);
-        console.log('[ManageAccess] sharingResp:', JSON.stringify(sharingResp));
-        console.log('[ManageAccess] shareWith:', JSON.stringify(shareWith));
-        const ga =
-          shareWith && typeof shareWith.general_access === 'string'
-            ? shareWith.general_access
-            : null;
-        const parsed = Object.entries(shareWith ?? {})
-          .filter(([k]) => k !== 'general_access')
-          .map(([al, r]: [string, any]) => ({
-            accessLevel: al,
-            users: normalizeList(r?.users),
-            roles: normalizeList(r?.roles),
-          }))
-          .filter((e) => e.users.length > 0 || e.roles.length > 0);
+        const access = (accessResp as any)?.access;
+        const userCanShare = access?.can_share || access?.is_owner || access?.is_admin;
+        setCanShare(!!userCanShare);
 
-        setGeneralAccess(ga);
-        setEntries(parsed);
-        setInitialSignature(JSON.stringify({ generalAccess: ga, entries: parsed }));
+        // If user can share, fetch full sharing details
+        if (userCanShare) {
+          const sharingResp = await http
+            .get(`${RESOURCE_API_BASE}/view`, {
+              query: { resourceId: qualifiedId, resourceType: objectType },
+            })
+            .catch(() => null);
+          if (cancelled) return;
+
+          const shareWith = (sharingResp as any)?.sharing_info?.share_with;
+          const ga =
+            shareWith && typeof shareWith.general_access === 'string'
+              ? shareWith.general_access
+              : null;
+          const parsed = Object.entries(shareWith ?? {})
+            .filter(([k]) => k !== 'general_access')
+            .map(([al, r]: [string, any]) => ({
+              accessLevel: al,
+              users: normalizeList(r?.users),
+              roles: normalizeList(r?.roles),
+            }))
+            .filter((e) => e.users.length > 0 || e.roles.length > 0);
+
+          setGeneralAccess(ga);
+          setEntries(parsed);
+          setInitialEntries(parsed);
+          setInitialSignature(JSON.stringify({ generalAccess: ga, entries: parsed }));
+        } else {
+          // Non-sharer: show general access level read-only
+          const ga = access?.general_access ?? null;
+          setGeneralAccess(ga);
+        }
       } catch (e: any) {
         if (!cancelled) setError(e?.body?.message ?? e?.message ?? 'Failed to load sharing info');
       } finally {
@@ -137,7 +153,7 @@ export function ManageAccessPanel({ http, objectId, objectType, currentUsername 
     return () => {
       cancelled = true;
     };
-  }, [http, objectId, objectType]);
+  }, [http, objectId, objectType, qualifiedId]);
 
   const currentSignature = JSON.stringify({ generalAccess, entries });
   const hasChanges = currentSignature !== initialSignature;
@@ -155,15 +171,43 @@ export function ManageAccessPanel({ http, objectId, objectType, currentUsername 
     setError(null);
     setSaveSuccess(false);
     try {
+      // Build add: current entries
+      const add: Record<string, any> = {};
+      for (const e of entries) {
+        if (e.users.length > 0 || e.roles.length > 0) {
+          add[e.accessLevel] = {
+            ...(e.users.length > 0 ? { users: e.users } : {}),
+            ...(e.roles.length > 0 ? { roles: e.roles } : {}),
+          };
+        }
+      }
+      // Build revoke: principals in initial but not in current
+      const revoke: Record<string, any> = {};
+      for (const prev of initialEntries) {
+        const cur = entries.find((e) => e.accessLevel === prev.accessLevel);
+        const removedUsers = prev.users.filter((u) => !cur?.users.includes(u));
+        const removedRoles = prev.roles.filter((r) => !cur?.roles.includes(r));
+        if (removedUsers.length > 0 || removedRoles.length > 0) {
+          revoke[prev.accessLevel] = {
+            ...(removedUsers.length > 0 ? { users: removedUsers } : {}),
+            ...(removedRoles.length > 0 ? { roles: removedRoles } : {}),
+          };
+        }
+      }
+
       await http.post(`${RESOURCE_API_BASE}/patch_sharing`, {
         body: JSON.stringify({
           resource_id: qualifiedId,
           resource_type: objectType,
           general_access: generalAccess,
+          add,
+          revoke,
         }),
       });
+      setInitialEntries(entries);
       setInitialSignature(currentSignature);
       setSaveSuccess(true);
+      window.dispatchEvent(new CustomEvent('resourceSharingChanged'));
     } catch (e: any) {
       setError(e?.body?.message ?? e?.message ?? 'Failed to save');
     } finally {
@@ -213,7 +257,10 @@ export function ManageAccessPanel({ http, objectId, objectType, currentUsername 
             { value: '', text: 'Private (only owner)' },
             ...accessLevels
               .filter((al) => !al.includes('full_access'))
-              .map((al) => ({ value: al, text: 'Anyone can ' + formatAccessLevel(al).toLowerCase() })),
+              .map((al) => ({
+                value: al,
+                text: 'Anyone can ' + formatAccessLevel(al).toLowerCase(),
+              })),
           ]}
           onChange={(e) => setGeneralAccess(e.target.value || null)}
         />

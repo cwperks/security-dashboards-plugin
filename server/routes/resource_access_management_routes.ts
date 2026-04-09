@@ -78,6 +78,7 @@ const postBodySchema = schema.object(
 const SECURITY_RESOURCE_API_PREFIX = '/_plugins/_security/api/resource';
 const LIST_TYPES_API = `${SECURITY_RESOURCE_API_PREFIX}/types`;
 const LIST_SHARING_INFO_API = `${SECURITY_RESOURCE_API_PREFIX}/list`;
+const ACCESS_API = `${SECURITY_RESOURCE_API_PREFIX}/access`;
 const SHARE_API = `${SECURITY_RESOURCE_API_PREFIX}/share`;
 
 export function defineResourceAccessManagementRoutes(router: IRouter, dataSourceEnabled: boolean) {
@@ -186,6 +187,36 @@ export function defineResourceAccessManagementRoutes(router: IRouter, dataSource
     }
   );
 
+  // GET current user's access level for a resource (no share permission required)
+  router.get(
+    {
+      path: '/api/resource/access',
+      validate: {
+        query: schema.object({
+          resourceId: schema.string(),
+          resourceType: schema.string(),
+        }),
+      },
+    },
+    async (context, request, response) => {
+      try {
+        const { resourceId, resourceType } = request.query as {
+          resourceId: string;
+          resourceType: string;
+        };
+        const client = context.core.opensearch.client.asCurrentUser;
+        const result = await client.transport.request({
+          method: 'GET',
+          path: ACCESS_API,
+          querystring: { resource_id: resourceId, resource_type: resourceType },
+        });
+        return response.ok({ body: result.body });
+      } catch (error: any) {
+        return response.customError({ statusCode: error.statusCode || 500, body: error.message });
+      }
+    }
+  );
+
   // PUT share a resource — requires `share_with`
   router.put(
     {
@@ -262,6 +293,8 @@ export function defineResourceAccessManagementRoutes(router: IRouter, dataSource
           resource_id: schema.string({ minLength: 1 }),
           resource_type: schema.string({ minLength: 1 }),
           general_access: schema.nullable(schema.string()),
+          add: schema.maybe(schema.any()),
+          revoke: schema.maybe(schema.any()),
         }),
         query: schema.object({
           dataSourceId: schema.maybe(schema.string()),
