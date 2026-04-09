@@ -16,6 +16,7 @@
 import { BehaviorSubject } from 'rxjs';
 import { SavedObjectsManagementColumn } from 'src/plugins/saved_objects_management/public';
 import { i18n } from '@osd/i18n';
+import React from 'react';
 import {
   AppCategory,
   AppMountParameters,
@@ -65,6 +66,7 @@ import {
   SecurityPluginSetupDependencies,
 } from './types';
 import { addTenantToShareURL } from './services/shared-link';
+import { ManageAccessPanel } from './apps/resource-sharing/manage_access_panel';
 import { interceptError } from './utils/logout-utils';
 import { tenantColumn, getNamespacesToRegister } from './apps/configuration/utils/tenant-utils';
 import { getDashboardsInfoSafe } from './utils/dashboards-info-utils';
@@ -135,6 +137,42 @@ export class SecurityPlugin
     const isReadonly = accountInfo?.roles.some((role) =>
       (config.readonly_mode?.roles || DEFAULT_READONLY_ROLES).includes(role)
     );
+
+    // Register "Manage access" panel in the share context menu
+    if (resourceSharingEnabled && deps.share) {
+      deps.share.register({
+        id: 'resourceSharing',
+        getShareMenuItems: ({
+          objectType,
+          objectId,
+        }: {
+          objectType: string;
+          objectId?: string;
+        }) => {
+          if (!objectId) return [];
+          return [
+            {
+              shareMenuItem: {
+                name: 'Manage access',
+                icon: 'lock',
+                sortOrder: 100,
+              },
+              panel: {
+                id: 'manageAccessPanel',
+                title: 'Manage access',
+                width: 500,
+                content: React.createElement(ManageAccessPanel, {
+                  http: core.http as any,
+                  objectId,
+                  objectType,
+                  currentUsername: accountInfo?.user_name,
+                }),
+              },
+            },
+          ];
+        },
+      });
+    }
 
     const mountWrapper = async (params: AppMountParameters, redirect: string) => {
       const { renderApp } = await import('./apps/configuration/configuration-app');

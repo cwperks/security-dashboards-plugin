@@ -252,4 +252,34 @@ export function defineResourceAccessManagementRoutes(router: IRouter, dataSource
       }
     }
   );
+
+  // PATCH general access for a resource
+  router.post(
+    {
+      path: '/api/resource/patch_sharing',
+      validate: {
+        body: schema.object({
+          resource_id: schema.string({ minLength: 1 }),
+          resource_type: schema.string({ minLength: 1 }),
+          general_access: schema.nullable(schema.string()),
+        }),
+        query: schema.object({
+          dataSourceId: schema.maybe(schema.string()),
+        }),
+      },
+    },
+    async (context, request, response) => {
+      try {
+        const client = context.core.opensearch.client.asCurrentUser;
+        const result = await client.transport.request({
+          method: 'PATCH',
+          path: SHARE_API,
+          body: request.body,
+        });
+        return response.ok({ body: result.body });
+      } catch (error: any) {
+        return response.customError({ statusCode: error.statusCode || 500, body: error.message });
+      }
+    }
+  );
 }

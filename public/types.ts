@@ -31,6 +31,7 @@ export interface SecurityPluginSetupDependencies {
   savedObjectsManagement: SavedObjectsManagementPluginSetup;
   managementOverview?: ManagementOverViewPluginSetup;
   dataSourceManagement?: DataSourceManagementPluginSetup;
+  share?: { register: (provider: any) => void };
 }
 
 export interface Cluster {
