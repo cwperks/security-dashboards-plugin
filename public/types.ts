@@ -57,6 +57,7 @@ export interface DashboardsInfo {
   preferred_tenants?: string[];
   default_tenant: string;
   password_validation_error_message: string;
+  sign_in_options?: string[];
   resource_sharing_enabled?: boolean;
 }
 

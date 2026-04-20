@@ -22,7 +22,13 @@ import {
   RequestHandlerContext,
   OpenSearchDashboardsRequest,
 } from 'opensearch-dashboards/server';
-import { API_PREFIX, CONFIGURATION_API_PREFIX, isValidResourceName } from '../../common';
+import {
+  API_ENDPOINT_DASHBOARD_SIGNIN_OPTIONS,
+  API_PREFIX,
+  CONFIGURATION_API_PREFIX,
+  isValidResourceName,
+} from '../../common';
+import { DashboardSignInOption } from '../../public/apps/configuration/types';
 
 // TODO: consider to extract entity CRUD operations and put it into a client class
 export function defineRoutes(router: IRouter, dataSourceEnabled: boolean) {
@@ -598,6 +604,94 @@ export function defineRoutes(router: IRouter, dataSourceEnabled: boolean) {
 
         return response.ok({
           body: esResp,
+        });
+      } catch (error) {
+        return errorResponse(response, error);
+      }
+    }
+  );
+
+  router.get(
+    {
+      path: API_ENDPOINT_DASHBOARD_SIGNIN_OPTIONS,
+      validate: false,
+      options: {
+        authRequired: false,
+      },
+    },
+    async (
+      context,
+      request,
+      response
+    ): Promise<IOpenSearchDashboardsResponse<any | ResponseError>> => {
+      try {
+        const esResp = await context.security_plugin.esClient.callAsInternalUser(
+          'opensearch_security.dashboardsinfo'
+        );
+        const normalizedSignInOptions = Array.isArray(esResp.sign_in_options)
+          ? esResp.sign_in_options
+              .map((option) => {
+                switch (String(option).toLowerCase()) {
+                  case DashboardSignInOption.BASIC:
+                  case 'basic':
+                    return DashboardSignInOption.BASIC;
+                  case DashboardSignInOption.OPEN_ID:
+                    return DashboardSignInOption.OPEN_ID;
+                  case DashboardSignInOption.SAML:
+                    return DashboardSignInOption.SAML;
+                  case DashboardSignInOption.ANONYMOUS:
+                    return DashboardSignInOption.ANONYMOUS;
+                  default:
+                    return undefined;
+                }
+              })
+              .filter((option): option is DashboardSignInOption => Boolean(option))
+          : [];
+
+        return response.ok({
+          body: normalizedSignInOptions,
+        });
+      } catch (error) {
+        return errorResponse(response, error);
+      }
+    }
+  );
+
+  router.put(
+    {
+      path: API_ENDPOINT_DASHBOARD_SIGNIN_OPTIONS,
+      validate: {
+        body: schema.object({
+          sign_in_options: schema.arrayOf(
+            schema.oneOf([
+              schema.literal(DashboardSignInOption.BASIC),
+              schema.literal(DashboardSignInOption.OPEN_ID),
+              schema.literal(DashboardSignInOption.SAML),
+              schema.literal(DashboardSignInOption.ANONYMOUS),
+            ]),
+            { defaultValue: [DashboardSignInOption.BASIC], minSize: 1 }
+          ),
+        }),
+      },
+    },
+    async (
+      context,
+      request,
+      response
+    ): Promise<IOpenSearchDashboardsResponse<any | ResponseError>> => {
+      try {
+        const esResp = await context.security_plugin.esClient
+          .asScoped(request)
+          .callAsCurrentUser('opensearch_security.tenancy_configs', {
+            body: {
+              sign_in_options: request.body.sign_in_options,
+            },
+          });
+
+        return response.ok({
+          body: {
+            message: esResp.message,
+          },
         });
       } catch (error) {
         return errorResponse(response, error);

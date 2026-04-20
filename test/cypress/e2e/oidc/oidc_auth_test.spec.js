@@ -137,8 +137,7 @@ describe('Log in via OIDC', () => {
 
     localStorage.setItem('home:newThemeModal:show', 'false');
 
-    cy.get('#private').should('be.enabled');
-    cy.get('#private').click({ force: true });
+    cy.get('#private').should('be.visible').and('be.enabled').click();
 
     cy.get('button[data-test-subj="confirm"]').click();
 
