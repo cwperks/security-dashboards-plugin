@@ -250,7 +250,9 @@ const ShareAccessModal: React.FC<ModalProps> = ({
   useEffect(() => {
     Promise.all([
       fetchUserNameList(http, '').catch(() => []),
-      fetchRole(http, '').then((r: any) => Object.keys(r?.data ?? {})).catch(() => []),
+      fetchRole(http, '')
+        .then((r: any) => Object.keys(r?.data ?? {}))
+        .catch(() => []),
     ]).then(([users, roles]) => {
       setUserOptions(users.map((u: string) => ({ label: u })));
       setRoleOptions(roles.map((r: string) => ({ label: r })));
