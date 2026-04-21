@@ -34,6 +34,8 @@ import {
   EuiTitle,
 } from '@elastic/eui';
 import { HttpStart } from '../../../../../src/core/public';
+import { fetchUserNameList } from '../configuration/utils/internal-user-list-utils';
+import { fetchRole } from '../configuration/utils/role-list-utils';
 
 const RESOURCE_API_BASE = '/api/resource';
 
@@ -80,6 +82,8 @@ export function ManageAccessPanel({ http, objectId, objectType, currentUsername 
   const [initialSignature, setInitialSignature] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [canShare, setCanShare] = useState(true);
+  const [userOptions, setUserOptions] = useState<Array<EuiComboBoxOptionOption<string>>>([]);
+  const [roleOptions, setRoleOptions] = useState<Array<EuiComboBoxOptionOption<string>>>([]);
 
   const qualifiedId = `${objectType}:${objectId}`;
 
@@ -111,6 +115,17 @@ export function ManageAccessPanel({ http, objectId, objectType, currentUsername 
         const access = (accessResp as any)?.access;
         const userCanShare = access?.can_share || access?.is_owner || access?.is_admin;
         setCanShare(!!userCanShare);
+
+        // Fetch user and role suggestions for typeahead (best-effort, 403 = no suggestions)
+        if (userCanShare) {
+          Promise.all([
+            fetchUserNameList(http, '').catch(() => []),
+            fetchRole(http, '').then((r: any) => Object.keys(r?.data ?? {})).catch(() => []),
+          ]).then(([users, roles]) => {
+            setUserOptions(users.map((u: string) => ({ label: u })));
+            setRoleOptions(roles.map((r: string) => ({ label: r })));
+          });
+        }
 
         // If user can share, fetch full sharing details
         if (userCanShare) {
@@ -295,7 +310,7 @@ export function ManageAccessPanel({ http, objectId, objectType, currentUsername 
               <EuiFormRow label="Users" compressed>
                 <EuiComboBox
                   compressed
-                  noSuggestions
+                  options={userOptions}
                   selectedOptions={toOptions(entry.users)}
                   onCreateOption={(v) => {
                     const next = [...entries];
@@ -312,7 +327,7 @@ export function ManageAccessPanel({ http, objectId, objectType, currentUsername 
               <EuiFormRow label="Roles" compressed>
                 <EuiComboBox
                   compressed
-                  noSuggestions
+                  options={roleOptions}
                   selectedOptions={toOptions(entry.roles)}
                   onCreateOption={(v) => {
                     const next = [...entries];
