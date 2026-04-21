@@ -12,7 +12,8 @@
   "optionalPlugins": [
     "managementOverview",
     "dataSource",
-    "dataSourceManagement"
+    "dataSourceManagement",
+    "share"
   ],
   "server": true,
   "ui": true,
