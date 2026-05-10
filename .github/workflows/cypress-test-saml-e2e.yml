@@ -3,10 +3,13 @@ name: Snapshot based E2E SAML tests workflow
 on: [ push, pull_request ]
 
 env:
+  KEYCLOAK_VERSION: '21.0.1'
   CI: 1
   # avoid warnings like "tput: No value for $TERM and no -T specified"
   TERM: xterm
   PLUGIN_NAME: opensearch-security
+  # This is the SHA256 checksum of the known good kc.sh script for Keycloak version 21.0.1.
+  KNOWN_CHECKSUM_OF_KEYCLOAK_SCRIPT: 'f825ea1a9ffa5ad91673737c06857ababbb69b6b8f09e0c637b4c998517f9608'
   OPENSEARCH_INITIAL_ADMIN_PASSWORD: myStrongPassword123!
 
 jobs:
@@ -30,6 +33,43 @@ jobs:
           echo "OPENSEARCH_VERSION=$opensearch_version" >> $GITHUB_ENV
           echo "PLUGIN_VERSION=$plugin_version" >> $GITHUB_ENV
         shell: bash
+
+      - name: Download and Check Keycloak Version on Linux
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          echo "Downloading Keycloak ${{ env.KEYCLOAK_VERSION }}"
+          wget https://github.com/keycloak/keycloak/releases/download/${{ env.KEYCLOAK_VERSION }}/keycloak-${{ env.KEYCLOAK_VERSION }}.tar.gz
+          echo "Unpacking Keycloak"
+          tar -xzf keycloak-${{ env.KEYCLOAK_VERSION }}.tar.gz
+          cd keycloak-${{ env.KEYCLOAK_VERSION }}/bin
+          echo "Generating checksum for the downloaded kc.sh script..."
+          DOWNLOADED_CHECKSUM=$(sha256sum kc.sh | awk '{print $1}')
+          echo "Downloaded kc.sh checksum: $DOWNLOADED_CHECKSUM"
+          echo "Known good kc.sh checksum: ${{ env.KNOWN_CHECKSUM_OF_KEYCLOAK_SCRIPT }}"
+          KNOWN_GOOD_CHECKSUM="${{ env.KNOWN_CHECKSUM_OF_KEYCLOAK_SCRIPT }}"
+          if [ "$DOWNLOADED_CHECKSUM" != "$KNOWN_GOOD_CHECKSUM" ]; then
+              echo "Checksum mismatch. The kc.sh script does not match the known good version. Please check https://github.com/keycloak/keycloak and verify the updates."
+              exit 1
+          else
+              echo "Checksum match confirmed. Proceeding with setup."
+          fi
+          chmod +x ./kc.sh
+
+      - name: Get and run Keycloak on Linux
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          export KEYCLOAK_ADMIN=admin
+          export KEYCLOAK_ADMIN_PASSWORD=admin
+          cd keycloak-${{ env.KEYCLOAK_VERSION }}/bin
+          echo "Starting keycloak"
+          ./kc.sh start-dev --http-enabled=true --hostname-strict-https=false --http-host=localhost --http-relative-path /auth --health-enabled=true &
+          timeout 300 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:8080/auth/health)" != "200" ]]; do sleep 5; done'
+          chmod +x kcadm.sh
+          echo "Creating SAML client"
+          ./kcadm.sh config credentials --server http://localhost:8080/auth --realm master --user admin --password admin
+          ./kcadm.sh create users -r master -s username=saml.jackson@example.com -s email=saml.jackson@example.com -s firstName=Saml -s lastName=Jackson -s enabled=true -s emailVerified=true
+          ./kcadm.sh set-password -r master --username saml.jackson@example.com --new-password admin
+          ./kcadm.sh create clients -r master -s clientId=https://localhost:9200 -s name=opensearch-saml -s protocol=saml -s enabled=true -s 'redirectUris=["http://localhost:5601${{ matrix.basePath }}/_opendistro/_security/saml/acs"]' -s 'attributes."saml.assertion.signature"=true' -s 'attributes."saml.server.signature"=true' -s 'attributes."saml.client.signature"=false' -s 'attributes."saml.authnstatement"=true' -s 'attributes."saml_force_name_id_format"=true' -s 'attributes."saml_name_id_format"=email'
       
       # Add SAML Configuration
       - name: Create SAML Configuration for Linux
@@ -65,8 +105,8 @@ jobs:
                     challenge: true
                     config:
                       idp:
-                        entity_id: urn:example:idp
-                        metadata_url: http://localhost:7000/metadata
+                        entity_id: http://localhost:8080/auth/realms/master
+                        metadata_url: http://localhost:8080/auth/realms/master/protocol/saml/descriptor
                       sp:
                         entity_id: https://localhost:9200
                       kibana_url: http://localhost:5601${{ matrix.basePath }}

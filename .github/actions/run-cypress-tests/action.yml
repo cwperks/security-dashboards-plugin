@@ -57,17 +57,6 @@ runs:
         plugin_name: security-dashboards-plugin
         opensearch_dashboards_yml: ${{ inputs.dashboards_config_file }}
 
-    - name: Run pretest script
-      if: ${{ runner.os == 'Linux' }}
-      run: |
-        cd ./OpenSearch-Dashboards/plugins/security-dashboards-plugin
-        if [ -z "${{ inputs.osd_base_path }}" ]; then
-          yarn runIdp &
-        else
-          yarn runIdp --basePath ${{ inputs.osd_base_path }} &
-        fi
-      shell: bash
-
     - name: Compile OpenSearch Dashboards
       run: |
         cd OpenSearch-Dashboards
