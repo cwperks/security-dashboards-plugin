@@ -23,7 +23,7 @@ import { ALL_ACCESS_ROLE, SHORTEN_URL_DATA } from '../../support/constants';
 import samlUserRoleMapping from '../../fixtures/saml/samlUserRoleMappiing.json';
 
 const basePath = Cypress.env('basePath') || '';
-const idpOrigin = new URL(Cypress.env('idpUrl') || 'http://localhost:7000').origin;
+const idpOrigin = new URL(Cypress.env('idpUrl') || 'http://localhost:8080').origin;
 const osdOrigin = 'http://localhost:5601';
 
 Cypress.on('uncaught:exception', (err) => {
@@ -58,8 +58,10 @@ afterEach(() => {
 
 describe('Log in via SAML', () => {
   const submitIdpLogin = () => {
-    cy.get('input[id=userName]').should('be.visible');
-    cy.get('button[id=btn-sign-in]').should('be.visible').click();
+    cy.get('#kc-page-title').should('be.visible');
+    cy.get('input[id=username]').should('be.visible').type('saml.jackson@example.com');
+    cy.get('input[id=password]').should('be.visible').type('admin');
+    cy.get('#kc-login').click();
   };
 
   const submitIdpLoginIfNeeded = () => {
