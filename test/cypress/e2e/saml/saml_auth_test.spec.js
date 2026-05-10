@@ -82,8 +82,10 @@ describe('Log in via SAML', () => {
     cy.get('a[aria-label="saml_login_button"]').should('be.visible').click();
     cy.location('origin', { timeout: 60000 }).should('eq', idpOrigin);
     cy.origin(idpOrigin, () => {
-      cy.get('input[id=userName]').should('be.visible');
-      cy.get('button[id=btn-sign-in]').should('be.visible').click();
+      cy.get('#kc-page-title').should('be.visible');
+      cy.get('input[id=username]').should('be.visible').type('saml.jackson@example.com');
+      cy.get('input[id=password]').should('be.visible').type('admin');
+      cy.get('#kc-login').click();
     });
     cy.location('origin', { timeout: 60000 }).should('not.eq', idpOrigin);
     cy.getCookie('security_authentication', { timeout: 60000 }).should('exist');
