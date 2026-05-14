@@ -680,11 +680,25 @@ export function defineRoutes(router: IRouter, dataSourceEnabled: boolean) {
       response
     ): Promise<IOpenSearchDashboardsResponse<any | ResponseError>> => {
       try {
+        const backendSignInOptions = request.body.sign_in_options.map((option: string) => {
+          switch (option) {
+            case DashboardSignInOption.BASIC:
+              return 'BASIC';
+            case DashboardSignInOption.OPEN_ID:
+              return 'OPENID';
+            case DashboardSignInOption.SAML:
+              return 'SAML';
+            case DashboardSignInOption.ANONYMOUS:
+              return 'ANONYMOUS';
+            default:
+              return option.toUpperCase();
+          }
+        });
         const esResp = await context.security_plugin.esClient
           .asScoped(request)
           .callAsCurrentUser('opensearch_security.tenancy_configs', {
             body: {
-              sign_in_options: request.body.sign_in_options,
+              sign_in_options: backendSignInOptions,
             },
           });
 
