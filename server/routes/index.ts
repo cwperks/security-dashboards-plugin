@@ -703,9 +703,7 @@ export function defineRoutes(router: IRouter, dataSourceEnabled: boolean) {
           });
 
         return response.ok({
-          body: {
-            message: esResp.message,
-          },
+          body: esResp,
         });
       } catch (error) {
         return errorResponse(response, error);

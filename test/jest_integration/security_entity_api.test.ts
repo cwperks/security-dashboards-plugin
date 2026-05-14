@@ -427,7 +427,7 @@ describe('start OpenSearch Dashboards server', () => {
       });
 
     expect(response.status).toEqual(200);
-    expect(response.body.message).toBeDefined();
+    expect(response.body.sign_in_options).toBeDefined();
   });
 
   it('index_mappings', async () => {
