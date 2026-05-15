@@ -108,6 +108,10 @@ export function LoginPage(props: LoginPageDeps) {
 
   React.useEffect(() => {
     const loadDynamicSignInOptions = async () => {
+      if (!props.config.auth.dynamic_sign_in_options?.enabled) {
+        setDynamicSignInOptions(null);
+        return;
+      }
       try {
         setDynamicSignInOptions(await getDashboardsSignInOptions(props.http));
       } catch (error) {
@@ -116,7 +120,7 @@ export function LoginPage(props: LoginPageDeps) {
     };
 
     loadDynamicSignInOptions();
-  }, [props.http]);
+  }, [props.http, props.config.auth.dynamic_sign_in_options?.enabled]);
 
   let errorLabel: any = null;
   if (loginFailed) {

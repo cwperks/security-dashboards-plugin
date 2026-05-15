@@ -114,6 +114,9 @@ export interface ClientConfigType {
     type: string | string[];
     anonymous_auth_enabled: boolean;
     logout_url: string;
+    dynamic_sign_in_options: {
+      enabled: boolean;
+    };
   };
   clusterPermissions: {
     include: string[];
