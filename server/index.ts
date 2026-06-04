@@ -295,6 +295,9 @@ export const configSchema = schema.object({
   resource_sharing: schema.object({
     enabled: schema.boolean({ defaultValue: false }),
   }),
+  api_keys: schema.object({
+    enabled: schema.boolean({ defaultValue: false }),
+  }),
 });
 
 export type SecurityPluginConfigType = TypeOf<typeof configSchema>;
@@ -310,6 +313,7 @@ export const config: PluginConfigDescriptor<SecurityPluginConfigType> = {
     indexPermissions: true,
     disabledTransportCategories: true,
     disabledRestCategories: true,
+    api_keys: true,
   },
   schema: configSchema,
   deprecations: ({ rename, unused }) => [

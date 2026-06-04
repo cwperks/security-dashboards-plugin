@@ -163,3 +163,19 @@ export interface DashboardOption {
   displayName: string;
   status: boolean;
 }
+
+export interface ApiTokenIndexPermission {
+  index_pattern: string[];
+  allowed_actions: string[];
+}
+
+export interface ApiToken {
+  id: string;
+  name: string;
+  iat: number;
+  expires_at?: number;
+  cluster_permissions: string[];
+  index_permissions: ApiTokenIndexPermission[];
+  revoked_at?: number;
+  created_by?: string;
+}

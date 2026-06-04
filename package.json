@@ -36,12 +36,12 @@
     "husky": "^8.0.0",
     "jose": "^5.2.4",
     "minimist": "^1.2.8",
-    "saml-idp": "^1.2.1",
+    "xml-crypto": "^6.0.1",
     "selfsigned": "^2.0.1"
   },
   "dependencies": {
     "@hapi/cryptiles": "5.0.0",
-    "@hapi/wreck": "^17.1.0",
+    "@hapi/wreck": "^18.1.1",
     "html-entities": "1.3.1",
     "proxy-agent": "^6.4.0",
     "semver": "^7.5.3",
@@ -57,7 +57,8 @@
     "body-parser": "^1.20.3",
     "micromatch": "^4.0.8",
     "cross-spawn": "7.0.5",
-    "xml-crypto": "^2.1.6",
+    "xml-crypto": "^6.0.1",
+    "@xmldom/xmldom": "^0.8.13",
     "@babel/runtime": "^7.27.0",
     "pbkdf2": "^3.1.3",
     "crypto-browserify": "^3.12.1",
@@ -68,6 +69,8 @@
     "qs": "^6.15.0",
     "lodash": "^4.18.0",
     "bn.js": "^5.2.3",
-    "minimatch": "^5.1.7"
+    "minimatch": "^5.1.7",
+    "uuid": ">=14.0.0",
+    "ws": ">=8.20.1"
   }
 }
