@@ -92,6 +92,7 @@ interface Api {
 interface Props {
   api: Api;
   toasts: CoreStart['notifications']['toasts'];
+  http: CoreStart['http'];
 }
 
 const hasSharingInfo = (sw?: ShareWith) =>
@@ -200,6 +201,9 @@ const extractHttpErrorLines = (e: any): string[] => {
 
 /** ---------- Share/Update modal ---------- */
 
+import { fetchUserNameList } from '../configuration/utils/internal-user-list-utils';
+import { fetchRole } from '../configuration/utils/role-list-utils';
+
 interface ModalProps {
   mode: 'create' | 'edit';
   isOpen: boolean;
@@ -209,6 +213,7 @@ interface ModalProps {
   resourceType: string;
   resourceTypeIndex: string;
   accessLevels: string[];
+  http: CoreStart['http'];
 }
 
 const hasNonEmptyRecipients = (r?: ShareRecipients) =>
@@ -231,6 +236,7 @@ const ShareAccessModal: React.FC<ModalProps> = ({
   resourceType,
   resourceTypeIndex,
   accessLevels,
+  http,
 }) => {
   const original = useMemo(() => cloneShareWith(resource?.share_with), [resource?.share_with]);
   const [working, setWorking] = useState<ShareWith>(() =>
@@ -238,6 +244,20 @@ const ShareAccessModal: React.FC<ModalProps> = ({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorLines, setErrorLines] = useState<string[]>([]);
+  const [userOptions, setUserOptions] = useState<Array<{ label: string }>>([]);
+  const [roleOptions, setRoleOptions] = useState<Array<{ label: string }>>([]);
+
+  useEffect(() => {
+    Promise.all([
+      fetchUserNameList(http, '').catch(() => []),
+      fetchRole(http, '')
+        .then((r: any) => Object.keys(r?.data ?? {}))
+        .catch(() => []),
+    ]).then(([users, roles]) => {
+      setUserOptions(users.map((u: string) => ({ label: u })));
+      setRoleOptions(roles.map((r: string) => ({ label: r })));
+    });
+  }, [http]);
 
   useEffect(() => {
     if (mode === 'edit') setWorking(cloneShareWith(resource.share_with));
@@ -427,7 +447,7 @@ const ShareAccessModal: React.FC<ModalProps> = ({
                 <EuiFormRow label="Users">
                   <EuiComboBox
                     placeholder="Add users…"
-                    noSuggestions
+                    options={userOptions}
                     selectedOptions={toOptions(recipients.users)}
                     onCreateOption={(v) =>
                       setRecipients(levelName, 'users', [...(recipients.users || []), v])
@@ -438,7 +458,7 @@ const ShareAccessModal: React.FC<ModalProps> = ({
                 <EuiFormRow label="Roles">
                   <EuiComboBox
                     placeholder="Add roles…"
-                    noSuggestions
+                    options={roleOptions}
                     selectedOptions={toOptions(recipients.roles)}
                     onCreateOption={(v) =>
                       setRecipients(levelName, 'roles', [...(recipients.roles || []), v])
@@ -449,7 +469,6 @@ const ShareAccessModal: React.FC<ModalProps> = ({
                 <EuiFormRow label="Backend roles">
                   <EuiComboBox
                     placeholder="Add backend roles…"
-                    noSuggestions
                     selectedOptions={toOptions(recipients.backend_roles)}
                     onCreateOption={(v) =>
                       setRecipients(levelName, 'backend_roles', [
@@ -522,7 +541,7 @@ const SharedWithExpanded: React.FC<{ sw?: ShareWith }> = ({ sw }) => {
 const SELECTED_TYPE_SESSION_KEY = 'security::resourceSharing::selectedType';
 
 /** ---------- Main table ---------- */
-export const ResourceSharingPanel: React.FC<Props> = ({ api, toasts }) => {
+export const ResourceSharingPanel: React.FC<Props> = ({ api, toasts, http }) => {
   const [typeOptions, setTypeOptions] = useState<
     Array<{ value: string; text: string; accessLevels: string[] }>
   >([]);
@@ -880,6 +899,7 @@ export const ResourceSharingPanel: React.FC<Props> = ({ api, toasts }) => {
         resourceType={selectedTypeLabel}
         resourceTypeIndex={selectedType}
         accessLevels={currentAccessLevels}
+        http={http}
       />
     </EuiPanel>
   );

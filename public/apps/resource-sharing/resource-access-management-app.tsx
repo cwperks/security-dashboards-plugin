@@ -79,7 +79,7 @@ const ResourceAccessManagementApp: React.FC<Props> = (props) => {
             </div>
           </EuiPageHeader>
           <EuiSpacer size="m" />
-          <ResourceSharingPanel api={api} toasts={toasts} />
+          <ResourceSharingPanel api={api} toasts={toasts} http={http} />
         </EuiPageBody>
       </EuiPage>
     </>
