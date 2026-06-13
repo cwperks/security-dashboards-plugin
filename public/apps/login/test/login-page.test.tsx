@@ -13,8 +13,8 @@
  *   permissions and limitations under the License.
  */
 
-import { shallow } from 'enzyme';
-import React from 'react';
+import { mount, shallow } from 'enzyme';
+import React, { act } from 'react';
 import { ClientConfigType } from '../../../types';
 import { LoginPage, extractNextUrlFromWindowLocation, getNextPath } from '../login-page';
 import { validateCurrentPassword } from '../../../utils/login-utils';
@@ -22,9 +22,14 @@ import { API_AUTH_LOGOUT } from '../../../../common';
 import { chromeServiceMock } from '../../../../../../src/core/public/mocks';
 import { AuthType } from '../../../../common';
 import { setSavedTenant } from '../../../utils/storage-utils';
+import { getDashboardsSignInOptions } from '../../../utils/dashboards-info-utils';
 
 jest.mock('../../../utils/login-utils', () => ({
   validateCurrentPassword: jest.fn(),
+}));
+
+jest.mock('../../../utils/dashboards-info-utils', () => ({
+  getDashboardsSignInOptions: jest.fn(),
 }));
 
 const configUI = {
@@ -144,6 +149,7 @@ describe('Login page', () => {
 
   beforeEach(() => {
     chrome = chromeServiceMock.createStartContract();
+    (getDashboardsSignInOptions as jest.Mock).mockRejectedValue(new Error('not configured'));
   });
 
   describe('renders', () => {
@@ -263,8 +269,6 @@ describe('Login page', () => {
 
   describe('event trigger testing', () => {
     let component;
-    const setState = jest.fn();
-    const useState = jest.spyOn(React, 'useState');
     const config: ClientConfigType = {
       ui: configUiDefault,
       auth: {
@@ -272,8 +276,7 @@ describe('Login page', () => {
       },
     };
     beforeEach(() => {
-      useState.mockImplementation((initialValue) => [initialValue, setState]);
-      component = shallow(
+      component = mount(
         <LoginPage http={mockHttpStart as any} chrome={chrome} config={config as any} />
       );
     });
@@ -282,23 +285,23 @@ describe('Login page', () => {
       const event = {
         target: { value: 'dummy' },
       } as React.ChangeEvent<HTMLInputElement>;
-      component.find('[data-test-subj="user-name"]').simulate('change', event);
-      expect(setState).toBeCalledWith('dummy');
+      component.find('input[data-test-subj="user-name"]').simulate('change', event);
+      component.update();
+      expect(component.find('input[data-test-subj="user-name"]').prop('value')).toBe('dummy');
     });
 
     it('should update password field on change event', () => {
       const event = {
         target: { value: 'dummy' },
       } as React.ChangeEvent<HTMLInputElement>;
-      component.find('[data-test-subj="password"]').simulate('change', event);
-      expect(setState).toBeCalledWith('dummy');
+      component.find('input[data-test-subj="password"]').simulate('change', event);
+      component.update();
+      expect(component.find('input[data-test-subj="password"]').prop('value')).toBe('dummy');
     });
   });
 
   describe('handle submit event', () => {
     let component;
-    const useState = jest.spyOn(React, 'useState');
-    const setState = jest.fn();
     const config: ClientConfigType = {
       ui: configUiDefault,
       auth: {
@@ -306,25 +309,40 @@ describe('Login page', () => {
       },
     };
     beforeEach(() => {
-      useState.mockImplementation(() => ['user1', setState]);
-      useState.mockImplementation(() => ['password1', setState]);
-      component = shallow(
+      (validateCurrentPassword as jest.Mock).mockResolvedValue(undefined);
+      component = mount(
         <LoginPage http={mockHttpStart as any} chrome={chrome} config={config as any} />
       );
     });
 
-    it('submit click event', () => {
+    it('submit click event', async () => {
       window = Object.create(window);
       const url = 'http://dummy.com';
       Object.defineProperty(window, 'location', {
         value: {
           href: url,
+          protocol: 'http:',
+          host: 'dummy.com',
+          search: '',
+          hash: '',
         },
       });
-      component.find('[data-test-subj="submit"]').simulate('click', {
-        preventDefault: () => {},
+      component.find('input[data-test-subj="user-name"]').simulate('change', {
+        target: { value: 'user1' },
       });
+      component.find('input[data-test-subj="password"]').simulate('change', {
+        target: { value: 'password1' },
+      });
+
+      await act(async () => {
+        component.find('button[aria-label="basicauth_login_button"]').simulate('click', {
+          preventDefault: () => {},
+        });
+      });
+      component.update();
+
       expect(validateCurrentPassword).toHaveBeenCalledTimes(1);
+      expect(validateCurrentPassword).toHaveBeenCalledWith(mockHttpStart, 'user1', 'password1');
     });
   });
 });

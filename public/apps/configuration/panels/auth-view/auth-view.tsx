@@ -28,10 +28,17 @@ import { SecurityPluginTopNavMenu } from '../../top-nav-menu';
 import { AccessErrorComponent } from '../../access-error-component';
 import { PageHeader } from '../../header/header-components';
 import { ResourceType } from '../../../../../common';
+import { getDashboardsSignInOptions } from '../../../../utils/dashboards-info-utils';
+import { DashboardSignInOption } from '../../types';
+import { SignInOptionsPanel } from './dashboard-signin-options';
+import { LocalCluster } from '../../../../utils/datasource-utils';
 
 export function AuthView(props: AppDependencies) {
   const [authentication, setAuthentication] = React.useState([]);
   const [authorization, setAuthorization] = React.useState([]);
+  const [dashboardSignInOptions, setDashboardSignInOptions] = React.useState<
+    DashboardSignInOption[]
+  >([]);
   const [loading, setLoading] = React.useState(false);
   const { dataSource, setDataSource } = useContext(DataSourceContext)!;
   const [errorFlag, setErrorFlag] = React.useState(false);
@@ -45,6 +52,15 @@ export function AuthView(props: AppDependencies) {
 
         setAuthentication(config.authc);
         setAuthorization(config.authz);
+        if (dataSource.id === LocalCluster.id) {
+          try {
+            setDashboardSignInOptions(await getDashboardsSignInOptions(props.coreStart.http));
+          } catch (error) {
+            setDashboardSignInOptions([]);
+          }
+        } else {
+          setDashboardSignInOptions([]);
+        }
         setErrorFlag(false);
         setAccessErrorFlag(false);
       } catch (e) {
@@ -139,6 +155,18 @@ export function AuthView(props: AppDependencies) {
         <>
           {/* @ts-ignore */}
           <AuthenticationSequencePanel authc={authentication} loading={loading} />
+          {dataSource.id === LocalCluster.id && (
+            <>
+              <EuiSpacer size="m" />
+              {/* @ts-ignore */}
+              <SignInOptionsPanel
+                authc={authentication}
+                signInEnabledOptions={dashboardSignInOptions}
+                http={props.coreStart.http}
+                isAnonymousAuthEnabled={Boolean(props.config.auth.anonymous_auth_enabled)}
+              />
+            </>
+          )}
           <EuiSpacer size="m" />
           {/* @ts-ignore */}
           <AuthorizationPanel authz={authorization} loading={loading} config={props.config} />

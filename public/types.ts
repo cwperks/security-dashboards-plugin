@@ -57,6 +57,7 @@ export interface DashboardsInfo {
   preferred_tenants?: string[];
   default_tenant: string;
   password_validation_error_message: string;
+  sign_in_options?: string[];
   resource_sharing_enabled?: boolean;
   api_tokens_enabled?: boolean;
   max_duration_seconds?: number;
@@ -115,6 +116,9 @@ export interface ClientConfigType {
     type: string | string[];
     anonymous_auth_enabled: boolean;
     logout_url: string;
+    dynamic_sign_in_options: {
+      enabled: boolean;
+    };
   };
   clusterPermissions: {
     include: string[];
