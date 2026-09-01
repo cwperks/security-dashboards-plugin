@@ -151,6 +151,19 @@ export interface FormRowDeps {
   helpText?: string;
 }
 
+export enum DashboardSignInOption {
+  BASIC = 'basicauth',
+  OPEN_ID = 'openid',
+  SAML = 'saml',
+  ANONYMOUS = 'anonymous',
+}
+
+export interface DashboardOption {
+  name: DashboardSignInOption;
+  displayName: string;
+  status: boolean;
+}
+
 export interface ApiTokenIndexPermission {
   index_pattern: string[];
   allowed_actions: string[];

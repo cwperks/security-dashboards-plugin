@@ -112,10 +112,10 @@ exports[`Login page renders renders with config value for multiauth 1`] = `
         aria-label="openid_login_button"
         className="test-btn-style"
         data-test-subj="submit"
-        href="/app/opensearch-dashboards/auth/openid/captureUrlFragment"
         iconType="http://localhost:5601/images/test.png"
+        onClick={[Function]}
         size="s"
-        type="prime"
+        type="button"
       >
         Button1
       </EuiButton>
@@ -132,10 +132,10 @@ exports[`Login page renders renders with config value for multiauth 1`] = `
         aria-label="saml_login_button"
         className="test-btn-style"
         data-test-subj="submit"
-        href="/app/opensearch-dashboards/auth/saml/captureUrlFragment"
         iconType="http://localhost:5601/images/test.png"
+        onClick={[Function]}
         size="s"
-        type="prime"
+        type="button"
       >
         Button2
       </EuiButton>
@@ -234,24 +234,6 @@ exports[`Login page renders renders with config value for multiauth with anonymo
         Log in
       </EuiButton>
     </EuiCompressedFormRow>
-    <EuiCompressedFormRow
-      describedByIds={Array []}
-      display="rowCompressed"
-      fullWidth={false}
-      hasChildLabel={true}
-      hasEmptyLabelSpace={false}
-      labelType="label"
-    >
-      <EuiButton
-        aria-label="anonymous_login_button"
-        className="test-btn-style"
-        data-test-subj="submit"
-        href="/app/opensearch-dashboards/auth/anonymous"
-        iconType="http://localhost:5601/images/test.png"
-        size="s"
-        type="prime"
-      />
-    </EuiCompressedFormRow>
     <EuiSpacer
       size="xs"
     />
@@ -271,13 +253,31 @@ exports[`Login page renders renders with config value for multiauth with anonymo
       labelType="label"
     >
       <EuiButton
+        aria-label="anonymous_login_button"
+        className="test-btn-style"
+        data-test-subj="submit"
+        iconType="http://localhost:5601/images/test.png"
+        onClick={[Function]}
+        size="s"
+        type="button"
+      />
+    </EuiCompressedFormRow>
+    <EuiCompressedFormRow
+      describedByIds={Array []}
+      display="rowCompressed"
+      fullWidth={false}
+      hasChildLabel={true}
+      hasEmptyLabelSpace={false}
+      labelType="label"
+    >
+      <EuiButton
         aria-label="openid_login_button"
         className="test-btn-style"
         data-test-subj="submit"
-        href="/app/opensearch-dashboards/auth/openid/captureUrlFragment"
         iconType="http://localhost:5601/images/test.png"
+        onClick={[Function]}
         size="s"
-        type="prime"
+        type="button"
       >
         Button1
       </EuiButton>
@@ -294,10 +294,10 @@ exports[`Login page renders renders with config value for multiauth with anonymo
         aria-label="saml_login_button"
         className="test-btn-style"
         data-test-subj="submit"
-        href="/app/opensearch-dashboards/auth/saml/captureUrlFragment"
         iconType="http://localhost:5601/images/test.png"
+        onClick={[Function]}
         size="s"
-        type="prime"
+        type="button"
       >
         Button2
       </EuiButton>
@@ -396,6 +396,16 @@ exports[`Login page renders renders with config value with anonymous auth enable
         Log in
       </EuiButton>
     </EuiCompressedFormRow>
+    <EuiSpacer
+      size="xs"
+    />
+    <EuiHorizontalRule
+      margin="xl"
+      size="full"
+    />
+    <EuiSpacer
+      size="xs"
+    />
     <EuiCompressedFormRow
       describedByIds={Array []}
       display="rowCompressed"
@@ -408,10 +418,10 @@ exports[`Login page renders renders with config value with anonymous auth enable
         aria-label="anonymous_login_button"
         className="test-btn-style"
         data-test-subj="submit"
-        href="/app/opensearch-dashboards/auth/anonymous"
         iconType="http://localhost:5601/images/test.png"
+        onClick={[Function]}
         size="s"
-        type="prime"
+        type="button"
       />
     </EuiCompressedFormRow>
   </EuiForm>
@@ -508,6 +518,16 @@ exports[`Login page renders renders with config value with anonymous auth enable
         Log in
       </EuiButton>
     </EuiCompressedFormRow>
+    <EuiSpacer
+      size="xs"
+    />
+    <EuiHorizontalRule
+      margin="xl"
+      size="full"
+    />
+    <EuiSpacer
+      size="xs"
+    />
     <EuiCompressedFormRow
       describedByIds={Array []}
       display="rowCompressed"
@@ -520,10 +540,10 @@ exports[`Login page renders renders with config value with anonymous auth enable
         aria-label="anonymous_login_button"
         className="test-btn-style"
         data-test-subj="submit"
-        href="/app/opensearch-dashboards/auth/anonymous"
         iconType="http://localhost:5601/images/test.png"
+        onClick={[Function]}
         size="s"
-        type="prime"
+        type="button"
       />
     </EuiCompressedFormRow>
   </EuiForm>

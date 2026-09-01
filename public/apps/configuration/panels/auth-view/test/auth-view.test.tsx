@@ -24,6 +24,8 @@ jest.mock('react', () => ({
 
 // eslint-disable-next-line
 const mockAuthViewUtils = require('../../../utils/auth-view-utils');
+// eslint-disable-next-line
+const mockDashboardsInfoUtils = require('../../../../../utils/dashboards-info-utils');
 
 describe('Auth view', () => {
   const mockCoreStart = {
@@ -53,6 +55,7 @@ describe('Auth view', () => {
       .spyOn(React, 'useState')
       .mockImplementationOnce(() => [[], setState])
       .mockImplementationOnce(() => [[], setState])
+      .mockImplementationOnce(() => [[], setState])
       .mockImplementationOnce(() => [false, jest.fn()])
       .mockImplementationOnce(() => [false, jest.fn()])
       .mockImplementationOnce(() => [false, jest.fn()]);
@@ -61,6 +64,7 @@ describe('Auth view', () => {
 
   it('valid data', (done) => {
     mockAuthViewUtils.getSecurityConfig = jest.fn().mockReturnValue(config);
+    mockDashboardsInfoUtils.getDashboardsSignInOptions = jest.fn().mockResolvedValue([]);
 
     shallow(<AuthView coreStart={mockCoreStart as any} depsStart={{ navigation: {} } as any} />);
 
@@ -96,6 +100,7 @@ describe('Auth view', () => {
     jest.spyOn(React, 'useState').mockRestore();
     jest
       .spyOn(React, 'useState')
+      .mockImplementationOnce(() => [[], setState])
       .mockImplementationOnce(() => [[], setState])
       .mockImplementationOnce(() => [[], setState])
       .mockImplementationOnce(() => [false, jest.fn()])
